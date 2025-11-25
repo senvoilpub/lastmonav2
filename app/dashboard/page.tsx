@@ -30,10 +30,19 @@ interface ResumeData {
   skills?: string[];
 }
 
+interface DbResume {
+  id: string;
+  prompt: string | null;
+  resume: ResumeData | null;
+  created_at: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [resume, setResume] = useState<ResumeData | null>(null);
+  const [resumes, setResumes] = useState<DbResume[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -46,17 +55,72 @@ export default function DashboardPage() {
         return;
       }
 
-      // Load resume from localStorage if present
+      let localResume: ResumeData | null = null;
+      let localPrompt: string | null = null;
+
+      // Load resume + prompt from localStorage if present
       try {
         if (typeof window !== "undefined") {
           const stored = window.localStorage.getItem("lastmona_resume");
+          const storedPrompt = window.localStorage.getItem("lastmona_prompt");
           if (stored) {
-            const parsed = JSON.parse(stored);
-            setResume(parsed);
+            localResume = JSON.parse(stored);
+          }
+          if (storedPrompt) {
+            localPrompt = storedPrompt;
           }
         }
       } catch {
         // ignore parse errors
+      }
+
+      // Fetch existing resumes for this user
+      const { data: existing, error } = await supabase
+        .from("resumes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      let list: DbResume[] = existing || [];
+
+      // If there is a locally generated resume + prompt, persist it as a new record
+      if (!error && localResume && localPrompt) {
+        const { data: inserted, error: insertError } = await supabase
+          .from("resumes")
+          .insert({
+            user_id: user.id,
+            prompt: localPrompt,
+            resume: localResume,
+          })
+          .select("*")
+          .single();
+
+        if (!insertError && inserted) {
+          list = [inserted as DbResume, ...list];
+        }
+
+        // Clear prompt so we don't re-insert the same resume again
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("lastmona_prompt");
+        }
+      }
+
+      setResumes(list);
+
+      if (list.length > 0) {
+        setSelectedId(list[0].id);
+        setResume((list[0].resume as ResumeData) || null);
+        if (typeof window !== "undefined" && list[0].resume) {
+          window.localStorage.setItem(
+            "lastmona_resume",
+            JSON.stringify(list[0].resume)
+          );
+        }
+      } else if (localResume) {
+        // fallback: show local resume if no DB record yet
+        setResume(localResume);
+      } else {
+        setResume(null);
       }
 
       setCheckingAuth(false);
@@ -104,6 +168,31 @@ export default function DashboardPage() {
     pdf.save("lastmona-resume.pdf");
   };
 
+  const persistCurrentResume = async (updated: ResumeData) => {
+    setResume(updated);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("lastmona_resume", JSON.stringify(updated));
+    }
+
+    if (!selectedId) return;
+
+    setResumes((prev) =>
+      prev.map((r) =>
+        r.id === selectedId ? { ...r, resume: updated } : r
+      )
+    );
+
+    try {
+      await supabase
+        .from("resumes")
+        .update({ resume: updated })
+        .eq("id", selectedId);
+    } catch {
+      // ignore DB errors here
+    }
+  };
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -139,6 +228,55 @@ export default function DashboardPage() {
           >
             <span>Dashboard</span>
           </button>
+          <div className="mt-6">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-2">
+              All resumes
+            </div>
+            <div className="space-y-1">
+              {resumes.length === 0 && (
+                <p className="text-[11px] text-gray-500 px-2">
+                  No resumes yet. Generate one from the homepage.
+                </p>
+              )}
+              {resumes.map((r) => {
+                const created = new Date(r.created_at);
+                const labelDate = created.toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                });
+                const name =
+                  (r.resume && (r.resume as ResumeData).name) || "Untitled resume";
+                const isActive = r.id === selectedId;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedId(r.id);
+                      setResume((r.resume as ResumeData) || null);
+                      if (typeof window !== "undefined" && r.resume) {
+                        window.localStorage.setItem(
+                          "lastmona_resume",
+                          JSON.stringify(r.resume)
+                        );
+                      }
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs ${
+                      isActive
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="truncate">{name}</div>
+                    <div className="text-[10px] text-gray-400">
+                      {labelDate}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </nav>
 
         <div className="px-4 py-4 border-t border-gray-100">
@@ -196,13 +334,7 @@ export default function DashboardPage() {
                       value={resume.name || ""}
                       onChange={(e) => {
                         const updated = { ...resume, name: e.target.value };
-                        setResume(updated);
-                        if (typeof window !== "undefined") {
-                          window.localStorage.setItem(
-                            "lastmona_resume",
-                            JSON.stringify(updated)
-                          );
-                        }
+                        persistCurrentResume(updated);
                       }}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -218,13 +350,7 @@ export default function DashboardPage() {
                         value={resume.email || ""}
                         onChange={(e) => {
                           const updated = { ...resume, email: e.target.value };
-                          setResume(updated);
-                          if (typeof window !== "undefined") {
-                            window.localStorage.setItem(
-                              "lastmona_resume",
-                              JSON.stringify(updated)
-                            );
-                          }
+                          persistCurrentResume(updated);
                         }}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
@@ -238,13 +364,7 @@ export default function DashboardPage() {
                         value={resume.phone || ""}
                         onChange={(e) => {
                           const updated = { ...resume, phone: e.target.value };
-                          setResume(updated);
-                          if (typeof window !== "undefined") {
-                            window.localStorage.setItem(
-                              "lastmona_resume",
-                              JSON.stringify(updated)
-                            );
-                          }
+                          persistCurrentResume(updated);
                         }}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
@@ -259,13 +379,7 @@ export default function DashboardPage() {
                       value={resume.summary || ""}
                       onChange={(e) => {
                         const updated = { ...resume, summary: e.target.value };
-                        setResume(updated);
-                        if (typeof window !== "undefined") {
-                          window.localStorage.setItem(
-                            "lastmona_resume",
-                            JSON.stringify(updated)
-                          );
-                        }
+                        persistCurrentResume(updated);
                       }}
                       rows={4}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -286,13 +400,7 @@ export default function DashboardPage() {
                         const newList = [...currentList];
                         newList[0] = { ...newList[0], [field]: value };
                         const updated = { ...resume, experience: newList };
-                        setResume(updated);
-                        if (typeof window !== "undefined") {
-                          window.localStorage.setItem(
-                            "lastmona_resume",
-                            JSON.stringify(updated)
-                          );
-                        }
+                        persistCurrentResume(updated);
                       };
                       return (
                         <div className="space-y-3">
@@ -367,13 +475,7 @@ export default function DashboardPage() {
                           .map((s) => s.trim())
                           .filter(Boolean);
                         const updated = { ...resume, skills: skillsArray };
-                        setResume(updated);
-                        if (typeof window !== "undefined") {
-                          window.localStorage.setItem(
-                            "lastmona_resume",
-                            JSON.stringify(updated)
-                          );
-                        }
+                        persistCurrentResume(updated);
                       }}
                       rows={3}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"

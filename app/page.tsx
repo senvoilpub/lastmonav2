@@ -83,6 +83,7 @@ export default function Home() {
             "lastmona_resume",
             JSON.stringify(data.resume)
           );
+          window.localStorage.setItem("lastmona_prompt", input);
         }
       } catch {
         // Ignore storage errors
