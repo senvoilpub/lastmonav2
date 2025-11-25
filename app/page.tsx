@@ -1,10 +1,11 @@
 "use client";
 
 import Navbar from "@/components/Navbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ResumeDisplay from "@/components/ResumeDisplay";
 import Link from "next/link";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -12,6 +13,18 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lang, setLang] = useState<"en" | "fr">("en");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+
+    checkAuth();
+  }, []);
 
   const wordCount = input.trim().split(/\s+/).filter(Boolean).length;
   const maxWords = 80;
@@ -64,6 +77,16 @@ export default function Home() {
       }
 
       setResumeData(data.resume);
+      try {
+        if (typeof window !== "undefined" && data.resume) {
+          window.localStorage.setItem(
+            "lastmona_resume",
+            JSON.stringify(data.resume)
+          );
+        }
+      } catch {
+        // Ignore storage errors
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -128,18 +151,46 @@ export default function Home() {
                 )}
               </p>
               <div className="pt-4">
-                <Link
-                  href="/signin"
-                  className="inline-block px-8 py-3 text-base font-semibold text-white bg-indigo-600 rounded-full shadow-md hover:shadow-lg hover:bg-indigo-700 transition-all"
-                >
-                  {lang === "en" ? "Start now" : "Commencer maintenant"}
-                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    href="/dashboard"
+                    className="inline-block px-8 py-3 text-base font-semibold text-white bg-indigo-600 rounded-full shadow-md hover:shadow-lg hover:bg-indigo-700 transition-all"
+                  >
+                    {lang === "en" ? "Go to dashboard" : "Aller au tableau de bord"}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/signin"
+                    className="inline-block px-8 py-3 text-base font-semibold text-white bg-indigo-600 rounded-full shadow-md hover:shadow-lg hover:bg-indigo-700 transition-all"
+                  >
+                    {lang === "en" ? "Start now" : "Commencer maintenant"}
+                  </Link>
+                )}
               </div>
             </div>
 
             {/* Right Side - Input or Output */}
             <div className="flex flex-col h-[350px] items-center">
-              {!resumeData ? (
+              {isAuthenticated ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <h2 className="mt-6 text-lg font-semibold leading-tight mb-3 text-indigo-600">
+                    {lang === "en"
+                      ? "You’re signed in."
+                      : "Vous êtes connecté."}
+                  </h2>
+                  <p className="text-sm text-gray-600 mb-4 max-w-sm">
+                    {lang === "en"
+                      ? "You can now manage everything from your dashboard."
+                      : "Vous pouvez maintenant tout gérer depuis votre tableau de bord."}
+                  </p>
+                  <Link
+                    href="/dashboard"
+                    className="px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
+                  >
+                    {lang === "en" ? "Open dashboard" : "Ouvrir le tableau de bord"}
+                  </Link>
+                </div>
+              ) : !resumeData ? (
                 <>
                   <h2 className="mt-6 text-lg font-semibold leading-tight mb-3 text-indigo-600 animated-text text-center">
                     {lang === "en"

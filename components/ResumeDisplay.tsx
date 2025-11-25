@@ -60,25 +60,33 @@ const DUMMY_DATA = {
 export default function ResumeDisplay({
   resumeData,
   isLoading,
+  mode = "preview",
 }: {
   resumeData: ResumeData | null;
   isLoading: boolean;
+  mode?: "preview" | "full";
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showBlur, setShowBlur] = useState(false);
 
   useEffect(() => {
-    // Always show blur when there's resume data (preview mode)
-    if (resumeData && !isLoading) {
-      setShowBlur(true);
+    // In preview mode, show blur when there's resume data
+    if (mode === "preview") {
+      if (resumeData && !isLoading) {
+        setShowBlur(true);
+      } else {
+        setShowBlur(false);
+      }
     } else {
       setShowBlur(false);
     }
-  }, [resumeData, isLoading]);
+  }, [resumeData, isLoading, mode]);
 
-  // Prevent scrolling when blur is shown
+  // Prevent scrolling when blur is shown (preview mode only)
   useEffect(() => {
+    if (mode !== "preview") return;
+
     if (contentRef.current && showBlur && !isLoading && resumeData) {
       const handleWheel = (e: WheelEvent) => {
         e.preventDefault();
@@ -101,7 +109,7 @@ export default function ResumeDisplay({
         element.style.overflow = '';
       };
     }
-  }, [showBlur, isLoading, resumeData]);
+  }, [showBlur, isLoading, resumeData, mode]);
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center p-8 bg-white">
@@ -163,7 +171,11 @@ export default function ResumeDisplay({
       {/* PDF-like container - fixed size with overflow hidden when blur is shown */}
       <div 
         ref={contentRef}
-        className={`bg-white shadow-lg p-6 ${!isLoading && resumeData ? "overflow-hidden" : "overflow-y-auto"}`}
+        className={`bg-white shadow-lg p-6 ${
+          !isLoading && resumeData && mode === "preview"
+            ? "overflow-hidden"
+            : "overflow-y-auto"
+        }`}
         style={{ 
           height: "100%",
           maxHeight: "100%",
@@ -216,7 +228,7 @@ export default function ResumeDisplay({
                 </span>
               </div>
               <ul className={`list-none space-y-0.5 mt-1 ${isPlaceholder(exp.description || "") ? "text-gray-400 italic" : "text-gray-700"}`}>
-                {exp.description?.split("\\n").filter(Boolean).map((bullet: string, bulletIdx: number) => {
+                {exp.description?.split("\n").filter(Boolean).map((bullet: string, bulletIdx: number) => {
                   const cleanBullet = bullet.trim().replace(/^[•\-\*]\s*/, "");
                   return (
                     <li key={bulletIdx} className="text-xs leading-relaxed flex items-start">
@@ -300,8 +312,8 @@ export default function ResumeDisplay({
         </section>
       </div>
       
-      {/* Blur overlay and Sign in button - Always show when there's resume data */}
-      {!isLoading && resumeData && (
+      {/* Blur overlay and Sign in button - preview mode only */}
+      {!isLoading && resumeData && mode === "preview" && (
         <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none z-10">
           <div 
             className="absolute inset-0 bg-gradient-to-t from-white via-white/98 to-transparent"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 type Lang = "en" | "fr";
 
@@ -13,6 +14,7 @@ interface NavbarProps {
 
 export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +27,17 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+
+    checkAuth();
   }, []);
 
   return (
@@ -84,10 +97,16 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
             </div>
 
             <Link
-              href="/signin"
+              href={isAuthenticated ? "/dashboard" : "/signin"}
               className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
             >
-              {lang === "en" ? "Sign in" : "Se connecter"}
+              {isAuthenticated
+                ? lang === "en"
+                  ? "Dashboard"
+                  : "Tableau de bord"
+                : lang === "en"
+                ? "Sign in"
+                : "Se connecter"}
             </Link>
           </div>
         </div>
