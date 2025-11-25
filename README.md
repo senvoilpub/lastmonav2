@@ -1,6 +1,6 @@
 # lastmona
 
-A modern Next.js application built with the App Router for generating resumes using AI.
+A modern Next.js application built with the App Router for generating resumes using AI
 
 ## Getting Started
 
