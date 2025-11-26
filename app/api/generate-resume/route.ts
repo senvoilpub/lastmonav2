@@ -1,8 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
 
+type Lang = "en" | "fr";
+
+function buildFallbackResume(experience: string, lang: Lang) {
+  if (lang === "fr") {
+    return {
+      name: "Alex Dupont",
+      email: "alex.dupont@example.com",
+      phone: "+33 6 12 34 56 78",
+      summary:
+        "Exemple de CV généré automatiquement car trop d’utilisateurs utilisent l’outil en ce moment. Connectez-vous pour générer, modifier et enregistrer votre propre CV à partir de votre expérience réelle.",
+      experience: [
+        {
+          title: "Responsable de projet",
+          company: "Entreprise Exemple",
+          period: "2019 - Aujourd’hui",
+          description:
+            "• Gère des projets transverses avec plusieurs équipes métiers et techniques\n" +
+            "• Coordonne la planification, le suivi des risques et la communication avec les parties prenantes\n" +
+            "• Met en place des tableaux de bord pour suivre les indicateurs clés et améliorer la prise de décision",
+        },
+      ],
+      education: [
+        {
+          degree: "Master en Management de Projet",
+          institution: "Université Exemple",
+          period: "2015 - 2017",
+        },
+      ],
+      certifications: [
+        {
+          name: "Certification Gestion de Projet",
+          issuer: "Institut Exemple",
+          date: "2021",
+        },
+      ],
+      skills: [
+        "Gestion de projet",
+        "Communication",
+        "Organisation",
+        "Travail en équipe",
+      ],
+    };
+  }
+
+  // Default: English
+  return {
+    name: "Alex Smith",
+    email: "alex.smith@example.com",
+    phone: "+1 (555) 123-4567",
+    summary:
+      "Sample resume generated because too many people are using the tool right now. Sign in to generate, edit and save a resume based on your real experience.",
+    experience: [
+      {
+        title: "Product Manager",
+        company: "Example Company",
+        period: "2019 - Present",
+        description:
+          "• Lead cross-functional teams to ship product improvements on a regular cadence\n" +
+          "• Collect feedback from users and stakeholders to refine roadmap priorities\n" +
+          "• Track key metrics and use data to support product decisions",
+      },
+    ],
+    education: [
+      {
+        degree: "Bachelor of Business Administration",
+        institution: "Example University",
+        period: "2014 - 2018",
+      },
+    ],
+    certifications: [
+      {
+        name: "Product Management Certification",
+        issuer: "Example Institute",
+        date: "2022",
+      },
+    ],
+    skills: ["Product management", "Communication", "Leadership", "Analysis"],
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { experience } = await request.json();
+    const { experience, lang }: { experience?: string; lang?: Lang } =
+      await request.json();
 
     if (!experience || typeof experience !== "string") {
       return NextResponse.json(
@@ -11,16 +92,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const language: Lang = lang === "fr" ? "fr" : "en";
+
     const apiKey = process.env.GEMINI_API_KEY;
+    const languageInstruction =
+      language === "fr"
+        ? "IMPORTANT: You must write the entire resume in French (FR)."
+        : "IMPORTANT: You must write the entire resume in English (EN).";
+
+    // If API key is missing, immediately fall back to a sample resume
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "Gemini API key is not configured" },
-        { status: 500 }
-      );
+      const fallback = buildFallbackResume(experience, language);
+      return NextResponse.json({ resume: fallback, fallback: true });
     }
 
     // Call Gemini API - Request JSON output
-    const prompt = `Build a professional resume using the following data. IF THE DATA DOESN'T CONCERN RESUME / DOESN'T MAKE SENSE data not related to resume write {0}. 
+    const prompt = `Build a professional resume using the following data. IF THE DATA DOESN'T CONCERN RESUME / DOESN'T MAKE SENSE data not related to resume write {0}.
+
+${languageInstruction}
 
 CRITICAL RESUME BEST PRACTICES - You MUST follow these:
 1. Use bullet points (•) for all experience descriptions - format as: "• Bullet point 1\\n• Bullet point 2\\n• Bullet point 3"
@@ -99,10 +188,8 @@ Extract information from the user data. Transform all simple descriptions into p
     if (!response.ok) {
       const errorData = await response.text();
       console.error("Gemini API error:", errorData);
-      return NextResponse.json(
-        { error: "Failed to generate resume from AI" },
-        { status: response.status }
-      );
+      const fallback = buildFallbackResume(experience, language);
+      return NextResponse.json({ resume: fallback, fallback: true });
     }
 
     const data = await response.json();
@@ -113,13 +200,18 @@ Extract information from the user data. Transform all simple descriptions into p
     // Check if AI returned {0} indicating invalid/non-resume data
     if (resumeText.trim() === "{0}") {
       return NextResponse.json(
-        { error: "The provided data doesn't appear to be related to a resume. Please provide professional experience, skills, education, or work history." },
+        {
+          error:
+            "The provided data doesn't appear to be related to a resume. Please provide professional experience, skills, education, or work history.",
+        },
         { status: 400 }
       );
     }
 
     // Try to extract JSON from the response (in case it's wrapped in markdown code blocks)
-    const jsonMatch = resumeText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || resumeText.match(/(\{[\s\S]*\})/);
+    const jsonMatch =
+      resumeText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) ||
+      resumeText.match(/(\{[\s\S]*\})/);
     if (jsonMatch) {
       resumeText = jsonMatch[1];
     }
@@ -129,21 +221,21 @@ Extract information from the user data. Transform all simple descriptions into p
     try {
       resumeJson = JSON.parse(resumeText);
     } catch (parseError) {
-      // If JSON parsing fails, return error
+      // If JSON parsing fails, fall back to sample resume
       console.error("Failed to parse JSON:", parseError);
-      return NextResponse.json(
-        { error: "Failed to parse resume data. Please try again." },
-        { status: 500 }
-      );
+      const fallback = buildFallbackResume(experience, language);
+      return NextResponse.json({ resume: fallback, fallback: true });
     }
 
-    return NextResponse.json({ resume: resumeJson });
+    return NextResponse.json({ resume: resumeJson, fallback: false });
   } catch (error) {
     console.error("Error generating resume:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+    // Any unexpected error -> fall back to a sample resume
+    const fallback = buildFallbackResume(
+      "",
+      "en" // default to English if we can't read body
     );
+    return NextResponse.json({ resume: fallback, fallback: true });
   }
 }
 

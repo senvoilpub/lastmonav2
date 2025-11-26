@@ -14,6 +14,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [lang, setLang] = useState<"en" | "fr">("en");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isFallbackResume, setIsFallbackResume] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -60,6 +61,7 @@ export default function Home() {
 
     setIsLoading(true);
     setError(null);
+    setIsFallbackResume(false);
 
     try {
       const response = await fetch("/api/generate-resume", {
@@ -67,7 +69,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ experience: input }),
+        body: JSON.stringify({ experience: input, lang }),
       });
 
       const data = await response.json();
@@ -77,6 +79,7 @@ export default function Home() {
       }
 
       setResumeData(data.resume);
+      setIsFallbackResume(!!data.fallback);
       try {
         if (typeof window !== "undefined" && data.resume) {
           window.localStorage.setItem(
@@ -254,6 +257,13 @@ export default function Home() {
                 </>
               ) : (
                 <div className="flex flex-col h-full" style={{ minHeight: 0 }}>
+                  {isFallbackResume && (
+                    <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      {lang === "en"
+                        ? "We’re currently at capacity. This is a sample resume. Sign in to save and edit your own CV."
+                        : "Nous sommes momentanément à capacité. Ceci est un exemple de CV. Connectez-vous pour enregistrer et modifier votre propre CV."}
+                    </div>
+                  )}
                   <h2 className="text-xl font-bold text-gray-900 mb-4 flex-shrink-0">
                     {lang === "en" ? "Your Resume" : "Votre CV"}
                   </h2>
