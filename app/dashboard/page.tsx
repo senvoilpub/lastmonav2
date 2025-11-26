@@ -158,19 +158,21 @@ export default function DashboardPage() {
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const imgWidth = pageWidth;
+    // Slight horizontal margins so PDF text is not oversized
+    const marginX = 24;
+    const imgWidth = pageWidth - marginX * 2;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
     let position = 0;
     let heightLeft = imgHeight;
 
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, "PNG", marginX, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
 
     while (heightLeft > 0) {
       pdf.addPage();
       position = heightLeft - imgHeight;
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, "PNG", marginX, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
     }
 
@@ -404,13 +406,15 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
-            >
-              Download / print PDF
-            </button>
+            {mode === "editor" && resume && (
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+              >
+                Download PDF
+              </button>
+            )}
           </div>
         </header>
 
@@ -541,7 +545,7 @@ export default function DashboardPage() {
                         const updated = { ...resume, name: e.target.value };
                         persistCurrentResume(updated);
                       }}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
 
@@ -557,7 +561,7 @@ export default function DashboardPage() {
                           const updated = { ...resume, email: e.target.value };
                           persistCurrentResume(updated);
                         }}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div>
@@ -571,7 +575,7 @@ export default function DashboardPage() {
                           const updated = { ...resume, phone: e.target.value };
                           persistCurrentResume(updated);
                         }}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   </div>
@@ -587,7 +591,7 @@ export default function DashboardPage() {
                         persistCurrentResume(updated);
                       }}
                       rows={4}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                     <p className="mt-1 text-[11px] text-gray-500">
                       Keep it short and focused on your key strengths.
@@ -618,7 +622,7 @@ export default function DashboardPage() {
                                 type="text"
                                 value={exp.title || ""}
                                 onChange={(e) => updateExpField("title", e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               />
                             </div>
                             <div>
@@ -629,7 +633,7 @@ export default function DashboardPage() {
                                 type="text"
                                 value={exp.company || ""}
                                 onChange={(e) => updateExpField("company", e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               />
                             </div>
                           </div>
@@ -642,7 +646,7 @@ export default function DashboardPage() {
                                 type="text"
                                 value={exp.period || ""}
                                 onChange={(e) => updateExpField("period", e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               />
                             </div>
                           </div>
@@ -656,7 +660,7 @@ export default function DashboardPage() {
                                 updateExpField("description", e.target.value)
                               }
                               rows={5}
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                             <p className="mt-1 text-[11px] text-gray-500">
                               Each line will appear as a separate bullet point in your
@@ -683,7 +687,7 @@ export default function DashboardPage() {
                         persistCurrentResume(updated);
                       }}
                       rows={3}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                     <p className="mt-1 text-[11px] text-gray-500">
                       Separate skills with commas (e.g. React, TypeScript, SQL).
