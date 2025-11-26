@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ResumeDisplay from "@/components/ResumeDisplay";
 
+const MAX_WORDS = 80;
+const MAX_CHARS = 600;
+
 interface ResumeData {
   name?: string;
   email?: string;
@@ -44,6 +47,11 @@ export default function DashboardPage() {
   const [resume, setResume] = useState<ResumeData | null>(null);
   const [resumes, setResumes] = useState<DbResume[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mode, setMode] = useState<"editor" | "generator">("editor");
+  const [input, setInput] = useState("");
+  const [genError, setGenError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [genLang, setGenLang] = useState<"en" | "fr">("en");
 
   useEffect(() => {
     const init = async () => {
@@ -194,6 +202,94 @@ export default function DashboardPage() {
     }
   };
 
+  const handleCreateResume = async () => {
+    if (resumes.length >= 3) {
+      setGenError(
+        "You’ve reached the limit of resumes you can create for now. We’re working hard to let you create more soon."
+      );
+      return;
+    }
+
+    const trimmed = input.trim();
+    if (!trimmed) {
+      setGenError("Please describe your experience before generating a resume.");
+      return;
+    }
+
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    if (words.length > MAX_WORDS) {
+      setGenError(`Please limit your description to ${MAX_WORDS} words.`);
+      return;
+    }
+    if (trimmed.length > MAX_CHARS) {
+      setGenError(`Please limit your description to ${MAX_CHARS} characters.`);
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenError(null);
+
+    try {
+      const response = await fetch("/api/generate-resume", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ experience: trimmed, lang: genLang }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate resume");
+      }
+
+      const generated: ResumeData = data.resume;
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/signin");
+        return;
+      }
+
+      const { data: inserted, error } = await supabase
+        .from("resumes")
+        .insert({
+          user_id: user.id,
+          prompt: trimmed,
+          resume: generated,
+        })
+        .select("*")
+        .single();
+
+      if (error || !inserted) {
+        throw error || new Error("Failed to save resume");
+      }
+
+      setResumes((prev) => [inserted as DbResume, ...prev]);
+      setSelectedId(inserted.id);
+      setResume(generated);
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("lastmona_resume", JSON.stringify(generated));
+      }
+
+      setMode("editor");
+      setInput("");
+    } catch (err) {
+      setGenError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create resume. Please try again."
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -227,6 +323,7 @@ export default function DashboardPage() {
           </div>
           <button
             type="button"
+            onClick={() => setMode("generator")}
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium"
           >
             <span>Dashboard</span>
@@ -300,7 +397,9 @@ export default function DashboardPage() {
               Dashboard
             </h1>
             <p className="text-sm text-gray-600">
-              View, edit and export your generated resume.
+              {mode === "generator"
+                ? "Create a new resume from your experience."
+                : "View, edit and export your generated resume."}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -314,7 +413,109 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0">
+        {mode === "generator" ? (
+          <div className="flex-1 flex items-center justify-center px-6 py-8">
+            <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-sm px-6 py-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+                  Create a new resume
+                </h2>
+                <div className="inline-flex items-center rounded-full bg-gray-100 px-1 py-1 text-[11px] font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setGenLang("en")}
+                    className={`px-2.5 py-0.5 rounded-full ${
+                      genLang === "en"
+                        ? "bg-white text-indigo-600 shadow-sm"
+                        : "text-gray-600 hover:text-indigo-600"
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGenLang("fr")}
+                    className={`px-2.5 py-0.5 rounded-full ${
+                      genLang === "fr"
+                        ? "bg-white text-indigo-600 shadow-sm"
+                        : "text-gray-600 hover:text-indigo-600"
+                    }`}
+                  >
+                    FR
+                  </button>
+                </div>
+              </div>
+
+              {resumes.length >= 3 && (
+                <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  You’ve reached the limit of resumes you can create for now. We’re
+                  working hard to let you create more CVs soon.
+                </div>
+              )}
+
+              {resumes.length < 3 && (
+                <>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Describe your experience, skills and what you’re proud of. We’ll
+                    turn it into a structured resume you can edit.
+                  </p>
+                  <textarea
+                    value={input}
+                    onChange={(e) => {
+                      const text = e.target.value;
+                      if (text.length <= MAX_CHARS) {
+                        const words = text.trim().split(/\s+/).filter(Boolean);
+                        if (words.length <= MAX_WORDS) {
+                          setInput(text);
+                          setGenError(null);
+                        }
+                      }
+                    }}
+                    className="w-full min-h-[160px] border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Write in English or French. Other languages are not supported."
+                  />
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[11px] text-gray-500">
+                      {input.trim().split(/\s+/).filter(Boolean).length} / {MAX_WORDS} words
+                    </span>
+                    <span className="text-[11px] text-gray-400">
+                      Max {MAX_CHARS} characters
+                    </span>
+                  </div>
+
+                  {genError && (
+                    <p className="mt-2 text-xs text-red-600">{genError}</p>
+                  )}
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleCreateResume}
+                      disabled={
+                        isGenerating ||
+                        !input.trim() ||
+                        input.trim().split(/\s+/).filter(Boolean).length >
+                          MAX_WORDS ||
+                        input.length > MAX_CHARS
+                      }
+                      className="px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isGenerating ? "Creating your resume..." : "Generate resume"}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {resumes.length >= 3 && (
+                <p className="mt-3 text-[11px] text-gray-500">
+                  You can still open and edit your existing resumes from the list on
+                  the left.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0">
           <section className="border-r border-gray-200 max-h-full overflow-y-auto">
             <div className="px-6 py-5">
               <h2 className="text-sm font-semibold text-gray-900 mb-3">
@@ -507,6 +708,7 @@ export default function DashboardPage() {
             </div>
           </section>
         </div>
+        )}
       </main>
     </div>
   );
