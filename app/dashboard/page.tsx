@@ -423,7 +423,7 @@ export default function DashboardPage() {
             <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-sm px-6 py-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-                  Create a new resume
+                  {genLang === "en" ? "Create a new resume" : "Créer un nouveau CV"}
                 </h2>
                 <div className="inline-flex items-center rounded-full bg-gray-100 px-1 py-1 text-[11px] font-medium">
                   <button
@@ -453,16 +453,18 @@ export default function DashboardPage() {
 
               {resumes.length >= 3 && (
                 <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  You’ve reached the limit of resumes you can create for now. We’re
-                  working hard to let you create more CVs soon.
+                  {genLang === "en"
+                    ? "You’ve reached the limit of resumes you can create for now. We’re working hard to let you create more CVs soon."
+                    : "Vous avez atteint pour l’instant la limite de CV que vous pouvez créer. Nous travaillons pour vous permettre d’en créer davantage bientôt."}
                 </div>
               )}
 
               {resumes.length < 3 && (
                 <>
                   <p className="text-xs text-gray-600 mb-2">
-                    Describe your experience, skills and what you’re proud of. We’ll
-                    turn it into a structured resume you can edit.
+                    {genLang === "en"
+                      ? "Describe your experience, skills and what you’re proud of. We’ll turn it into a structured resume you can edit."
+                      : "Décrivez votre expérience, vos compétences et ce dont vous êtes fier. Nous en ferons un CV structuré que vous pourrez modifier."}
                   </p>
                   <textarea
                     value={input}
@@ -477,7 +479,11 @@ export default function DashboardPage() {
                       }
                     }}
                     className="w-full min-h-[160px] border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Write in English or French. Other languages are not supported."
+                    placeholder={
+                      genLang === "en"
+                        ? "Write in English or French. Other languages are not supported."
+                        : "Écrivez en français ou en anglais. Les autres langues ne sont pas prises en charge."
+                    }
                   />
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-[11px] text-gray-500">
@@ -505,7 +511,13 @@ export default function DashboardPage() {
                       }
                       className="px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {isGenerating ? "Creating your resume..." : "Generate resume"}
+                      {isGenerating
+                        ? genLang === "en"
+                          ? "Creating your resume..."
+                          : "Création de votre CV..."
+                        : genLang === "en"
+                        ? "Generate resume"
+                        : "Générer un CV"}
                     </button>
                   </div>
                 </>
@@ -513,8 +525,9 @@ export default function DashboardPage() {
 
               {resumes.length >= 3 && (
                 <p className="mt-3 text-[11px] text-gray-500">
-                  You can still open and edit your existing resumes from the list on
-                  the left.
+                  {genLang === "en"
+                    ? "You can still open and edit your existing resumes from the list on the left."
+                    : "Vous pouvez toujours ouvrir et modifier vos CV existants depuis la liste à gauche."}
                 </p>
               )}
             </div>
