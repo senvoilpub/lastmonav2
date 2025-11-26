@@ -81,9 +81,13 @@ function buildFallbackResume(experience: string, lang: Lang) {
 }
 
 export async function POST(request: NextRequest) {
+  let language: Lang = "en";
+
   try {
-    const { experience, lang }: { experience?: string; lang?: Lang } =
-      await request.json();
+    const {
+      experience,
+      lang,
+    }: { experience?: string; lang?: Lang } = await request.json();
 
     if (!experience || typeof experience !== "string") {
       return NextResponse.json(
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const language: Lang = lang === "fr" ? "fr" : "en";
+    language = lang === "fr" ? "fr" : "en";
 
     const apiKey = process.env.GEMINI_API_KEY;
     const languageInstruction =

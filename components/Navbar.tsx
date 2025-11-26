@@ -70,8 +70,8 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
           <div className="hidden md:flex md:items-center" />
 
           {/* Right side - Language switcher + CTA */}
-          <div className="flex items-center gap-4 min-w-[220px] justify-end">
-            <div className="hidden sm:flex items-center gap-1 rounded-full bg-gray-100 px-1 py-1 text-xs font-medium">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-[220px] justify-end">
+            <div className="flex items-center gap-1 rounded-full bg-gray-100 px-1 py-1 text-xs font-medium">
               <button
                 type="button"
                 onClick={() => onLangChange && onLangChange("en")}
