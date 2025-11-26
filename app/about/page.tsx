@@ -22,13 +22,42 @@ export default function AboutPage() {
               </h1>
             </div>
 
-            <div className="mt-4 flex justify-start">
-              <p className="text-lg sm:text-xl text-gray-700 leading-relaxed max-w-3xl text-left">
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-10 items-start">
+              <p className="text-lg sm:text-xl text-gray-700 leading-relaxed text-left">
                 {lang === "en"
                   ? "We’re a European startup dedicated to helping talent move toward the jobs they aspire to. At a time when recruiting feels noisy and dominated by a few giants, we’re focused on rebuilding the experience from the ground up. With smart, ethical use of AI, we help you transform your story into a resume that opens doors."
                   : "Nous sommes une startup européenne dédiée à aider les talents à se rapprocher des postes auxquels ils aspirent. À une époque où le recrutement est bruyant et dominé par quelques géants, nous voulons reconstruire l’expérience depuis la base. Avec une utilisation intelligente et responsable de l’IA, nous vous aidons à transformer votre histoire en un CV qui ouvre des portes."}
               </p>
+
+              <div className="flex flex-col items-center justify-start md:justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Lastmona Logo"
+                  width={110}
+                  height={110}
+                  className="object-contain"
+                />
+              </div>
             </div>
+          </section>
+
+          {/* Vision for the platform */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {lang === "en"
+                ? "More than resumes"
+                : "Bien plus que des CV"}
+            </h2>
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+              {lang === "en"
+                ? "We’re starting with one simple promise: make it effortless to create a resume you’re proud to send. From there, we’ll expand step by step to rethink the entire recruitment journey – from how talent presents itself to how companies evaluate and communicate with candidates."
+                : "Nous commençons par une promesse simple : rendre évident le fait de créer un CV dont vous êtes fier. À partir de là, nous élargirons progressivement le produit pour repenser tout le parcours de recrutement – de la manière dont les talents se présentent à la façon dont les entreprises évaluent et échangent avec les candidats."}
+            </p>
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+              {lang === "en"
+                ? "AI is a tool, not a replacement for people. We use it to structure stories, clarify skills and save time – not to remove the human from hiring. Our goal is to rebuild trust between talent and recruiters by making conversations clearer, expectations more honest and matches more meaningful."
+                : "L’IA est un outil, pas un remplacement des personnes. Nous l’utilisons pour structurer les histoires, clarifier les compétences et faire gagner du temps – pas pour déshumaniser le recrutement. Notre objectif est de recréer de la confiance entre talents et recruteurs en rendant les échanges plus clairs, les attentes plus transparentes et les rencontres plus pertinentes."}
+            </p>
           </section>
 
           {/* (All additional sections below the intro have been removed intentionally) */}

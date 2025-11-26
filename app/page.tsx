@@ -160,12 +160,12 @@ export default function Home() {
                     {lang === "en" ? "Go to dashboard" : "Aller au tableau de bord"}
                   </Link>
                 ) : (
-                  <Link
-                    href="/signin"
-                    className="inline-block px-8 py-3 text-base font-semibold text-white bg-indigo-600 rounded-full shadow-md hover:shadow-lg hover:bg-indigo-700 transition-all"
-                  >
-                    {lang === "en" ? "Start now" : "Commencer maintenant"}
-                  </Link>
+                <Link
+                  href="/signin"
+                  className="inline-block px-8 py-3 text-base font-semibold text-white bg-indigo-600 rounded-full shadow-md hover:shadow-lg hover:bg-indigo-700 transition-all"
+                >
+                  {lang === "en" ? "Start now" : "Commencer maintenant"}
+                </Link>
                 )}
               </div>
             </div>

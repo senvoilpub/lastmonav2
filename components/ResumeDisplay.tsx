@@ -73,8 +73,8 @@ export default function ResumeDisplay({
   useEffect(() => {
     // In preview mode, show blur when there's resume data
     if (mode === "preview") {
-      if (resumeData && !isLoading) {
-        setShowBlur(true);
+    if (resumeData && !isLoading) {
+      setShowBlur(true);
       } else {
         setShowBlur(false);
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -205,17 +206,19 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-          <Image
-            src="/logo.png"
-            alt="Lastmona Logo"
-            width={32}
-            height={32}
-            className="object-contain"
-          />
-          <span className="text-lg font-semibold text-indigo-600 tracking-tight">
-            Lastmona
-          </span>
+        <div className="px-6 py-5 border-b border-gray-100">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Lastmona Logo"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+            <span className="text-lg font-semibold text-indigo-600 tracking-tight">
+              Lastmona
+            </span>
+          </Link>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2">
