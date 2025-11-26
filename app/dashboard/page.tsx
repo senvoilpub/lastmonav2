@@ -353,6 +353,7 @@ export default function DashboardPage() {
                     key={r.id}
                     type="button"
                     onClick={() => {
+                      setMode("editor");
                       setSelectedId(r.id);
                       setResume((r.resume as ResumeData) || null);
                       if (typeof window !== "undefined" && r.resume) {
