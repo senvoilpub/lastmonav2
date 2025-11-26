@@ -301,10 +301,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Left sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="px-6 py-5 border-b border-gray-100">
+      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo.png"
@@ -319,7 +319,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 sm:px-6 py-4 sm:py-6 space-y-2">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">
             Main
           </div>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
             <span>Dashboard</span>
           </button>
           <div className="mt-6">
-            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-2">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 sm:px-2 mb-2">
               All resumes
             </div>
             <div className="space-y-1">
@@ -394,7 +394,7 @@ export default function DashboardPage() {
 
       {/* Right content area */}
       <main className="flex-1 flex flex-col">
-        <header className="px-8 py-6 border-b border-gray-200 flex items-center justify-between">
+        <header className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
               Dashboard
@@ -405,7 +405,7 @@ export default function DashboardPage() {
                 : "View, edit and export your generated resume."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {mode === "editor" && resume && (
               <button
                 type="button"
@@ -419,8 +419,8 @@ export default function DashboardPage() {
         </header>
 
         {mode === "generator" ? (
-          <div className="flex-1 flex items-center justify-center px-6 py-8">
-            <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-sm px-6 py-6">
+          <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6">
+            <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-sm px-4 sm:px-6 py-5 sm:py-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900">
                   {genLang === "en" ? "Create a new resume" : "Créer un nouveau CV"}
@@ -534,8 +534,8 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0">
-          <section className="border-r border-gray-200 max-h-full overflow-y-auto">
-            <div className="px-6 py-5">
+          <section className="border-b lg:border-b-0 lg:border-r border-gray-200 max-h-full overflow-y-auto">
+            <div className="px-4 sm:px-6 py-5">
               <h2 className="text-sm font-semibold text-gray-900 mb-3">
                 Resume data
               </h2>
@@ -712,7 +712,7 @@ export default function DashboardPage() {
           </section>
 
           <section className="max-h-full overflow-y-auto bg-gray-100">
-            <div className="h-full p-6">
+            <div className="h-full px-4 sm:px-6 py-5 sm:py-6">
               <div
                 id="resume-pdf"
                 className="h-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
