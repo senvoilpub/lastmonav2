@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
-// Anonymous user ID - a fixed UUID for all anonymized resumes
-const ANONYMOUS_USER_ID = "00000000-0000-0000-0000-000000000000";
+// Anonymous user email - we'll create/find this user
+const ANONYMOUS_USER_EMAIL = "anonymous@lastmona.system";
+
+async function getOrCreateAnonymousUser(supabaseAdmin: ReturnType<typeof createClient>) {
+  // Try to find existing anonymous user
+  const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+  const anonymousUser = existingUsers?.users?.find(
+    (u) => u.email === ANONYMOUS_USER_EMAIL
+  );
+
+  if (anonymousUser) {
+    return anonymousUser.id;
+  }
+
+  // Create anonymous user if it doesn't exist
+  const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
+    email: ANONYMOUS_USER_EMAIL,
+    email_confirm: true,
+    password: randomUUID(), // Random password, user can't log in
+    user_metadata: {
+      is_anonymous: true,
+      name: "Anonymous User",
+    },
+  });
+
+  if (error || !newUser) {
+    console.error("Error creating anonymous user:", error);
+    throw new Error("Failed to create anonymous user");
+  }
+
+  return newUser.user.id;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,14 +81,22 @@ export async function POST(request: NextRequest) {
 
     const userId = user.id;
 
-    // First, ensure the anonymous user exists in auth.users (if needed)
-    // Actually, we'll just use the UUID directly in the resumes table
-    // The anonymous user doesn't need to exist in auth.users
+    // Get or create the anonymous user
+    let anonymousUserId: string;
+    try {
+      anonymousUserId = await getOrCreateAnonymousUser(supabaseAdmin);
+    } catch (error) {
+      console.error("Error getting anonymous user:", error);
+      return NextResponse.json(
+        { error: "Failed to set up anonymous user" },
+        { status: 500 }
+      );
+    }
 
     // Migrate all resumes from this user to anonymous user
     const { error: updateError } = await supabaseAdmin
       .from("resumes")
-      .update({ user_id: ANONYMOUS_USER_ID })
+      .update({ user_id: anonymousUserId })
       .eq("user_id", userId);
 
     if (updateError) {
