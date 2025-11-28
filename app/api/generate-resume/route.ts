@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     const languageInstruction =
       language === "fr"
-        ? "IMPORTANT: You must write the entire resume in French (FR)."
+        ? "IMPORTANT: You must write the ENTIRE resume in French (FR), including ALL section headers. Use these French section headers: 'Résumé professionnel' (not 'Professional Summary'), 'Expérience professionnelle' (not 'Work Experience'), 'Formation' (not 'Education'), 'Certifications' (same), 'Compétences' (not 'Skills'). Every single word in the resume must be in French."
         : "IMPORTANT: You must write the entire resume in English (EN).";
 
     // If API key is missing, immediately fall back to a sample resume

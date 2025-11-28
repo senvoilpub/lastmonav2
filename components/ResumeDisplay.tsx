@@ -57,6 +57,23 @@ const DUMMY_DATA = {
   skills: ["[Placeholder Skill 1]", "[Placeholder Skill 2]"],
 };
 
+// Detect if resume content is in French
+function detectLanguage(resumeData: ResumeData | null): "en" | "fr" {
+  if (!resumeData) return "en";
+  
+  const text = `${resumeData.summary || ""} ${resumeData.experience?.[0]?.description || ""}`.toLowerCase();
+  
+  // Common French words/patterns
+  const frenchIndicators = [
+    /\b(le|la|les|un|une|des|de|du|dans|sur|avec|pour|par|est|sont|été|être|avoir|fait|faites|gestion|projet|entreprise|travail|équipe|compétences|formation|expérience|professionnel|professionnelle)\b/i,
+    /\b(résumé|expérience|formation|certification|compétence|projet|entreprise|équipe)\b/i,
+  ];
+  
+  const frenchMatches = frenchIndicators.some(pattern => pattern.test(text));
+  
+  return frenchMatches ? "fr" : "en";
+}
+
 export default function ResumeDisplay({
   resumeData,
   isLoading,
@@ -69,6 +86,24 @@ export default function ResumeDisplay({
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showBlur, setShowBlur] = useState(false);
+  const lang = detectLanguage(resumeData);
+  
+  const sectionHeaders = {
+    en: {
+      summary: "Professional Summary",
+      experience: "Work Experience",
+      education: "Education",
+      certifications: "Certifications",
+      skills: "Skills",
+    },
+    fr: {
+      summary: "Résumé professionnel",
+      experience: "Expérience professionnelle",
+      education: "Formation",
+      certifications: "Certifications",
+      skills: "Compétences",
+    },
+  };
 
   useEffect(() => {
     // In preview mode, show blur when there's resume data
@@ -200,7 +235,7 @@ export default function ResumeDisplay({
         {/* Professional Summary */}
         <section className="mb-3">
           <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-            Professional Summary
+            {sectionHeaders[lang].summary}
           </h2>
           <p className={`text-gray-700 text-xs leading-relaxed ${isPlaceholder(data.summary || "") ? "text-gray-400 italic" : ""}`}>
             {data.summary}
@@ -210,7 +245,7 @@ export default function ResumeDisplay({
         {/* Experience */}
         <section className="mb-3">
           <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-            Work Experience
+            {sectionHeaders[lang].experience}
           </h2>
           {data.experience?.slice(0, 2).map((exp, idx) => (
             <div key={idx} className="mb-2">
@@ -245,7 +280,7 @@ export default function ResumeDisplay({
         {/* Education */}
         <section className="mb-3">
           <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-            Education
+            {sectionHeaders[lang].education}
           </h2>
           {data.education?.slice(0, 2).map((edu, idx) => (
             <div key={idx} className="mb-2">
@@ -270,7 +305,7 @@ export default function ResumeDisplay({
         {data.certifications && data.certifications.length > 0 && (
           <section className="mb-3">
             <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-              Certifications
+              {sectionHeaders[lang].certifications}
             </h2>
             {data.certifications.slice(0, 2).map((cert, idx) => (
               <div key={idx} className="mb-2">
@@ -295,7 +330,7 @@ export default function ResumeDisplay({
         {/* Skills */}
         <section className="mb-3">
           <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-            Skills
+            {sectionHeaders[lang].skills}
           </h2>
           <div className="flex flex-wrap gap-1">
             {data.skills?.slice(0, 8).map((skill, idx) => (
