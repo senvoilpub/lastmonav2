@@ -382,13 +382,23 @@ export default function DashboardPage() {
           </div>
         </nav>
 
-        <div className="px-4 py-4 border-t border-gray-100">
+        <div className="px-4 py-4 border-t border-gray-100 space-y-2">
           <Link
             href="/profile"
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
           >
             <span>Profile</span>
           </Link>
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.replace("/");
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <span>Log out</span>
+          </button>
         </div>
       </aside>
 

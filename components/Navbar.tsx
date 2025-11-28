@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -13,6 +14,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
@@ -38,7 +40,23 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
     };
 
     checkAuth();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      checkAuth();
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <nav
@@ -96,18 +114,30 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
               </button>
             </div>
 
-            <Link
-              href={isAuthenticated ? "/dashboard" : "/signin"}
-              className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
-            >
-              {isAuthenticated
-                ? lang === "en"
-                  ? "Dashboard"
-                  : "Tableau de bord"
-                : lang === "en"
-                ? "Sign in"
-                : "Se connecter"}
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard"
+                  className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
+                >
+                  {lang === "en" ? "Dashboard" : "Tableau de bord"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-200 transition-all"
+                >
+                  {lang === "en" ? "Log out" : "Déconnexion"}
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/signin"
+                className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
+              >
+                {lang === "en" ? "Sign in" : "Se connecter"}
+              </Link>
+            )}
           </div>
         </div>
       </div>

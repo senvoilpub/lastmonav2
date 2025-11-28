@@ -126,12 +126,22 @@ export default function ProfilePage() {
           </Link>
         </nav>
 
-        <div className="px-4 py-4 border-t border-gray-100">
+        <div className="px-4 py-4 border-t border-gray-100 space-y-2">
           <button
             type="button"
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium"
           >
             <span>Profile</span>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.replace("/");
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <span>{lang === "en" ? "Log out" : "Déconnexion"}</span>
           </button>
         </div>
       </aside>
