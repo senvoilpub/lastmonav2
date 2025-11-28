@@ -303,7 +303,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Left sidebar */}
-      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col h-screen md:h-screen">
+      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col md:sticky md:top-0 md:h-screen">
         {/* Top: Logo - Fixed */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3">
