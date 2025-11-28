@@ -298,41 +298,63 @@ export default function Home() {
           <div className="mt-12 mb-16">
             <div className="max-w-7xl">
               <div className="space-y-12">
-                {/* Resume Count Section - Simple & Elegant */}
+                {/* Resume Count Section */}
                 {resumeCount !== null && resumeCount > 0 && (
-                  <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full border border-indigo-200/50 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-gray-700">
-                        {lang === "en" ? (
-                          <>
-                            Already{" "}
-                            <span className="font-bold text-indigo-600">
+                  <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 rounded-2xl border border-indigo-100 p-8 sm:p-10">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
+                      <div className="text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
+                            {lang === "en" ? "Live Counter" : "Compteur en Direct"}
+                          </span>
+                        </div>
+                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                          {lang === "en" ? (
+                            <>
+                              Already{" "}
+                              <span className="text-indigo-600">
+                                {resumeCount >= 1000
+                                  ? `${(resumeCount / 1000).toFixed(1)}k`
+                                  : resumeCount.toLocaleString()}{" "}
+                                CVs
+                              </span>{" "}
+                              generated
+                            </>
+                          ) : (
+                            <>
+                              Déjà{" "}
+                              <span className="text-indigo-600">
+                                {resumeCount >= 1000
+                                  ? `${(resumeCount / 1000).toFixed(1)}k`
+                                  : resumeCount.toLocaleString()}{" "}
+                                CVs
+                              </span>{" "}
+                              générés
+                            </>
+                          )}
+                        </h3>
+                        <p className="text-base text-gray-600">
+                          {lang === "en"
+                            ? "Be the next one! Join thousands creating standout resumes."
+                            : "Soyez le prochain ! Rejoignez des milliers qui créent des CV remarquables."}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className="bg-white rounded-xl p-6 shadow-lg border border-indigo-100">
+                          <div className="text-center">
+                            <div className="text-4xl sm:text-5xl font-bold text-indigo-600 mb-1">
                               {resumeCount >= 1000
                                 ? `${(resumeCount / 1000).toFixed(1)}k`
-                                : resumeCount.toLocaleString()}{" "}
-                              CVs
-                            </span>{" "}
-                            generated
-                          </>
-                        ) : (
-                          <>
-                            Déjà{" "}
-                            <span className="font-bold text-indigo-600">
-                              {resumeCount >= 1000
-                                ? `${(resumeCount / 1000).toFixed(1)}k`
-                                : resumeCount.toLocaleString()}{" "}
-                              CVs
-                            </span>{" "}
-                            générés
-                          </>
-                        )}
-                      </span>
+                                : resumeCount.toLocaleString()}
+                            </div>
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                              {lang === "en" ? "Total Created" : "Total Créés"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm text-gray-500">•</span>
-                    <span className="text-sm font-medium text-indigo-600">
-                      {lang === "en" ? "Be the next one" : "Soyez le prochain"}
-                    </span>
                   </div>
                 )}
 
