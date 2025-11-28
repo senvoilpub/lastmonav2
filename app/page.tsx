@@ -300,7 +300,19 @@ export default function Home() {
               <div className="space-y-12">
                 {/* Resume Count Section */}
                 {resumeCount !== null && resumeCount > 0 && (
-                  <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 rounded-2xl border border-indigo-100 p-8 sm:p-10">
+                  <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 rounded-2xl border border-indigo-100 p-8 sm:p-10 relative overflow-hidden">
+                    {/* Transparency Badge */}
+                    <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full border border-indigo-200 shadow-sm">
+                        <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span className="text-xs font-semibold text-indigo-700">
+                          {lang === "en" ? "Real numbers, no bullshit" : "Chiffres réels, sans blague"}
+                        </span>
+                      </div>
+                    </div>
+                    
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                       <div className="text-center sm:text-left flex-1">
                         <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
