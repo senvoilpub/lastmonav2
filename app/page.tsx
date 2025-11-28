@@ -298,6 +298,73 @@ export default function Home() {
           <div className="mt-12 mb-16">
             <div className="max-w-7xl">
               <div className="space-y-12">
+                {/* Resume Count Section - Marketing Banner */}
+                {resumeCount !== null && resumeCount > 0 && (
+                  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 p-8 sm:p-10 shadow-2xl">
+                    {/* Decorative background elements */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full -ml-24 -mb-24 blur-2xl"></div>
+                    
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+                      <div className="flex-1 text-center sm:text-left">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-4">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-semibold text-white">
+                            {lang === "en" ? "Live counter" : "Compteur en direct"}
+                          </span>
+                        </div>
+                        <h3 className="text-3xl sm:text-4xl font-bold text-white mb-2 leading-tight">
+                          {lang === "en" ? (
+                            <>
+                              Already{" "}
+                              <span className="text-yellow-300">
+                                {resumeCount >= 1000
+                                  ? `${(resumeCount / 1000).toFixed(1)}k`
+                                  : resumeCount.toLocaleString()}{" "}
+                                CVs
+                              </span>{" "}
+                              were generated
+                            </>
+                          ) : (
+                            <>
+                              Déjà{" "}
+                              <span className="text-yellow-300">
+                                {resumeCount >= 1000
+                                  ? `${(resumeCount / 1000).toFixed(1)}k`
+                                  : resumeCount.toLocaleString()}{" "}
+                                CVs
+                              </span>{" "}
+                              générés
+                            </>
+                          )}
+                        </h3>
+                        <p className="text-lg sm:text-xl text-indigo-100 mt-2 font-medium">
+                          {lang === "en"
+                            ? "Be the next one! Join thousands of professionals creating standout resumes."
+                            : "Soyez le prochain ! Rejoignez des milliers de professionnels qui créent des CV remarquables."}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-white/30 rounded-2xl blur-xl"></div>
+                          <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
+                            <div className="text-center">
+                              <div className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600 mb-1">
+                                {resumeCount >= 1000
+                                  ? `${(resumeCount / 1000).toFixed(1)}k`
+                                  : resumeCount.toLocaleString()}
+                              </div>
+                              <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                                {lang === "en" ? "CVs Created" : "CVs Créés"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <h2 className="text-4xl font-bold text-gray-900 leading-tight max-w-3xl">
                   {lang === "en"
                     ? "From a few lines of text to a ready-to-use resume."
@@ -308,35 +375,6 @@ export default function Home() {
                     ? "We started Lastmona with one simple thing: make it painless to create a great resume. The rest of the platform will come on top of that."
                     : "On a commencé Lastmona avec une idée simple : rendre la création d'un bon CV enfin simple. Le reste de la plateforme viendra ensuite."}
                 </p>
-
-                {/* Resume Count Section */}
-                {resumeCount !== null && resumeCount > 0 && (
-                  <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center">
-                          <span className="text-2xl font-bold text-white">
-                            {resumeCount >= 1000
-                              ? `${(resumeCount / 1000).toFixed(1)}k`
-                              : resumeCount.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {lang === "en"
-                            ? "Resumes created"
-                            : "CV créés"}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {lang === "en"
-                            ? "Join thousands of professionals who have created their resumes with Lastmona"
-                            : "Rejoignez des milliers de professionnels qui ont créé leur CV avec Lastmona"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <div className="relative">
                   {/* Connecting flow line - hidden on mobile */}
