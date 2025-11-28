@@ -383,12 +383,12 @@ export default function DashboardPage() {
         </nav>
 
         <div className="px-4 py-4 border-t border-gray-100">
-          <button
-            type="button"
+          <Link
+            href="/profile"
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
           >
             <span>Profile</span>
-          </button>
+          </Link>
         </div>
       </aside>
 
