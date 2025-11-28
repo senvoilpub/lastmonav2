@@ -82,7 +82,7 @@ function buildFallbackResume(experience: string, lang: Lang) {
       email: "alex.dupont@example.com",
       phone: "+33 6 12 34 56 78",
       summary:
-        "Exemple de CV généré automatiquement car trop d’utilisateurs utilisent l’outil en ce moment. Connectez-vous pour générer, modifier et enregistrer votre propre CV à partir de votre expérience réelle.",
+        "Trop de personnes utilisent l'outil actuellement. Nous avons généré un exemple pour que vous puissiez voir à quoi ça ressemble. Connectez-vous pour générer, modifier et enregistrer votre propre CV à partir de votre expérience réelle.",
       experience: [
         {
           title: "Responsable de projet",
@@ -122,8 +122,8 @@ function buildFallbackResume(experience: string, lang: Lang) {
     name: "Alex Smith",
     email: "alex.smith@example.com",
     phone: "+1 (555) 123-4567",
-    summary:
-      "Sample resume generated because too many people are using the tool right now. Sign in to generate, edit and save a resume based on your real experience.",
+      summary:
+        "Too many people are using the tool currently. We generated you a sample so you can see an example. Sign in to generate, edit and save a resume based on your real experience.",
     experience: [
       {
         title: "Product Manager",

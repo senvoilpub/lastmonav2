@@ -15,6 +15,7 @@ export default function Home() {
   const [lang, setLang] = useState<"en" | "fr">("en");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isFallbackResume, setIsFallbackResume] = useState(false);
+  const [resumeCount, setResumeCount] = useState<number | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -25,6 +26,21 @@ export default function Home() {
     };
 
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    // Fetch resume count (safe server-side API)
+    fetch("/api/resume-count")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.count === "number") {
+          setResumeCount(data.count);
+        }
+      })
+      .catch(() => {
+        // Silently fail - don't show error to user
+        setResumeCount(null);
+      });
   }, []);
 
   const wordCount = input.trim().split(/\s+/).filter(Boolean).length;
@@ -260,8 +276,8 @@ export default function Home() {
                   {isFallbackResume && (
                     <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                       {lang === "en"
-                        ? "We’re currently at capacity. This is a sample resume. Sign in to save and edit your own CV."
-                        : "Nous sommes momentanément à capacité. Ceci est un exemple de CV. Connectez-vous pour enregistrer et modifier votre propre CV."}
+                        ? "Too many people are using the tool currently. We generated you a sample so you can see an example. Sign in to save and edit your own CV."
+                        : "Trop de personnes utilisent l'outil actuellement. Nous avons généré un exemple pour que vous puissiez voir à quoi ça ressemble. Connectez-vous pour enregistrer et modifier votre propre CV."}
                     </div>
                   )}
                   <h2 className="text-xl font-bold text-gray-900 mb-4 flex-shrink-0">
@@ -290,8 +306,37 @@ export default function Home() {
                 <p className="text-lg text-gray-600 max-w-3xl">
                   {lang === "en"
                     ? "We started Lastmona with one simple thing: make it painless to create a great resume. The rest of the platform will come on top of that."
-                    : "On a commencé Lastmona avec une idée simple : rendre la création d’un bon CV enfin simple. Le reste de la plateforme viendra ensuite."}
+                    : "On a commencé Lastmona avec une idée simple : rendre la création d'un bon CV enfin simple. Le reste de la plateforme viendra ensuite."}
                 </p>
+
+                {/* Resume Count Section */}
+                {resumeCount !== null && resumeCount > 0 && (
+                  <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center">
+                          <span className="text-2xl font-bold text-white">
+                            {resumeCount >= 1000
+                              ? `${(resumeCount / 1000).toFixed(1)}k`
+                              : resumeCount.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {lang === "en"
+                            ? "Resumes created"
+                            : "CV créés"}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {lang === "en"
+                            ? "Join thousands of professionals who have created their resumes with Lastmona"
+                            : "Rejoignez des milliers de professionnels qui ont créé leur CV avec Lastmona"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="relative">
                   {/* Connecting flow line - hidden on mobile */}
