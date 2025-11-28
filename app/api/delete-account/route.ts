@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 // Anonymous user email - we'll create/find this user
 const ANONYMOUS_USER_EMAIL = "anonymous@lastmona.system";
 
-async function getOrCreateAnonymousUser(supabaseAdmin: ReturnType<typeof createClient>) {
+async function getOrCreateAnonymousUser(supabaseAdmin: any) {
   // Try to find existing anonymous user
   const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
   const anonymousUser = existingUsers?.users?.find(
