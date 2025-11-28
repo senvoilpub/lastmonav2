@@ -9,7 +9,7 @@ async function getOrCreateAnonymousUser(supabaseAdmin: any) {
   // Try to find existing anonymous user
   const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
   const anonymousUser = existingUsers?.users?.find(
-    (u) => u.email === ANONYMOUS_USER_EMAIL
+    (u: { email?: string }) => u.email === ANONYMOUS_USER_EMAIL
   );
 
   if (anonymousUser) {
