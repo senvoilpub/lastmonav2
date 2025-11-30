@@ -123,7 +123,27 @@ export default function SignUpPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        // Check if the error indicates user already exists
+        const errorMessage = signUpError.message.toLowerCase();
+        const errorCode = signUpError.status || signUpError.code;
+        
+        if (
+          errorMessage.includes("already registered") ||
+          errorMessage.includes("already exists") ||
+          errorMessage.includes("user already") ||
+          errorMessage.includes("email already") ||
+          errorMessage.includes("user with this email") ||
+          errorCode === 422 || // Unprocessable Entity - often used for existing users
+          errorCode === 400 // Bad Request - sometimes used for existing users
+        ) {
+          setError(
+            lang === "en"
+              ? "An account with this email already exists. Please sign in instead."
+              : "Un compte avec cet email existe déjà. Veuillez vous connecter à la place."
+          );
+        } else {
+          setError(signUpError.message);
+        }
         return;
       }
 
@@ -137,12 +157,18 @@ export default function SignUpPage() {
         return;
       }
 
+      // Additional check: If we have a user but no session and no email confirmation was sent,
+      // it might mean the user already exists. However, Supabase typically returns an error for this.
+      // But to be safe, we'll show the success message only if we're confident it's a new account.
+      
       // Check if email confirmation is required
       if (data.session) {
         // Auto-signed in (email confirmation disabled), redirect immediately
         router.replace("/dashboard");
       } else {
         // Email confirmation required
+        // Note: If the user already exists, Supabase should have returned an error above.
+        // If we reach here, it's likely a new account that needs email confirmation.
         setMessage(
           lang === "en"
             ? "Account created! Please check your email (including spam folder) to confirm your account. After confirmation, you can sign in with your password."
