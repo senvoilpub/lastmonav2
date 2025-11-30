@@ -110,16 +110,29 @@ export default function SignInPage() {
             return;
           }
 
+          // Check if user was created
+          if (!data.user) {
+            setError(
+              lang === "en"
+                ? "Failed to create account. Please try again."
+                : "Échec de la création du compte. Veuillez réessayer."
+            );
+            return;
+          }
+
           // Check if email confirmation is required
-          if (data.user && !data.session) {
+          if (data.session) {
+            // Auto-signed in (email confirmation disabled), redirect immediately
+            router.replace("/dashboard");
+          } else {
+            // Email confirmation required
             setMessage(
               lang === "en"
-                ? "Please check your email to confirm your account before signing in."
-                : "Veuillez vérifier votre email pour confirmer votre compte avant de vous connecter."
+                ? "Account created! Please check your email (including spam folder) to confirm your account. After confirmation, you can sign in with your password."
+                : "Compte créé ! Veuillez vérifier votre email (y compris le dossier spam) pour confirmer votre compte. Après confirmation, vous pourrez vous connecter avec votre mot de passe."
             );
-          } else if (data.session) {
-            // Auto-signed in, redirect
-            router.replace("/dashboard");
+            // Clear password field for security
+            setPassword("");
           }
         } else {
           // Sign in with password

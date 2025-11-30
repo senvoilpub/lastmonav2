@@ -131,12 +131,12 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/signin"
-                className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
-              >
-                {lang === "en" ? "Sign in" : "Se connecter"}
-              </Link>
+            <Link
+              href="/signin"
+              className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
+            >
+              {lang === "en" ? "Sign in" : "Se connecter"}
+            </Link>
             )}
           </div>
         </div>
