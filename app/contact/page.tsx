@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import SEOStructuredData from "@/components/SEOStructuredData";
 
 export default function ContactPage() {
   const [lang, setLang] = useState<"en" | "fr">("en");
@@ -12,6 +13,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEOStructuredData type="contact" />
       <Navbar lang={lang} onLangChange={setLang} />
 
       <main className="pt-24 pb-20 px-6 sm:px-8 lg:px-12">
