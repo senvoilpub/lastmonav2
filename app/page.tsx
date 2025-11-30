@@ -82,11 +82,26 @@ export default function Home() {
       setIsFallbackResume(!!data.fallback);
       try {
         if (typeof window !== "undefined" && data.resume) {
+          // Check if user is authenticated before storing with user ID
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          
           window.localStorage.setItem(
             "lastmona_resume",
             JSON.stringify(data.resume)
           );
           window.localStorage.setItem("lastmona_prompt", input);
+          
+          // Only store user ID if user is authenticated
+          // If not authenticated, leave user_id empty so it gets cleared when another user logs in
+          if (user) {
+            window.localStorage.setItem("lastmona_user_id", user.id);
+          } else {
+            // Remove user_id if user is not authenticated
+            // This ensures data is cleared when a different user logs in
+            window.localStorage.removeItem("lastmona_user_id");
+          }
         }
       } catch {
         // Ignore storage errors

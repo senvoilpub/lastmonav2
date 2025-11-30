@@ -67,20 +67,34 @@ export default function DashboardPage() {
       let localResume: ResumeData | null = null;
       let localPrompt: string | null = null;
 
-      // Load resume + prompt from localStorage if present
+      // Load resume + prompt from localStorage if present AND belongs to current user
       try {
         if (typeof window !== "undefined") {
-          const stored = window.localStorage.getItem("lastmona_resume");
-          const storedPrompt = window.localStorage.getItem("lastmona_prompt");
-          if (stored) {
-            localResume = JSON.parse(stored);
-          }
-          if (storedPrompt) {
-            localPrompt = storedPrompt;
+          const storedUserId = window.localStorage.getItem("lastmona_user_id");
+          // Only load localStorage data if it belongs to the current user
+          if (storedUserId === user.id) {
+            const stored = window.localStorage.getItem("lastmona_resume");
+            const storedPrompt = window.localStorage.getItem("lastmona_prompt");
+            if (stored) {
+              localResume = JSON.parse(stored);
+            }
+            if (storedPrompt) {
+              localPrompt = storedPrompt;
+            }
+          } else {
+            // Clear localStorage if it belongs to a different user
+            window.localStorage.removeItem("lastmona_resume");
+            window.localStorage.removeItem("lastmona_prompt");
+            window.localStorage.removeItem("lastmona_user_id");
           }
         }
       } catch {
-        // ignore parse errors
+        // ignore parse errors, but clear potentially corrupted data
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("lastmona_resume");
+          window.localStorage.removeItem("lastmona_prompt");
+          window.localStorage.removeItem("lastmona_user_id");
+        }
       }
 
       // Fetch existing resumes for this user
@@ -120,13 +134,12 @@ export default function DashboardPage() {
         setSelectedId(list[0].id);
         setResume((list[0].resume as ResumeData) || null);
         if (typeof window !== "undefined" && list[0].resume) {
-          window.localStorage.setItem(
-            "lastmona_resume",
-            JSON.stringify(list[0].resume)
-          );
+          // Store with user ID to ensure data isolation
+          window.localStorage.setItem("lastmona_resume", JSON.stringify(list[0].resume));
+          window.localStorage.setItem("lastmona_user_id", user.id);
         }
       } else if (localResume) {
-        // fallback: show local resume if no DB record yet
+        // fallback: show local resume if no DB record yet (only if it belongs to current user)
         setResume(localResume);
       } else {
         setResume(null);
@@ -183,7 +196,15 @@ export default function DashboardPage() {
     setResume(updated);
 
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("lastmona_resume", JSON.stringify(updated));
+      // Get current user to store with resume data
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      
+      if (user) {
+        window.localStorage.setItem("lastmona_resume", JSON.stringify(updated));
+        window.localStorage.setItem("lastmona_user_id", user.id);
+      }
     }
 
     if (!selectedId) return;
@@ -277,6 +298,7 @@ export default function DashboardPage() {
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem("lastmona_resume", JSON.stringify(generated));
+        window.localStorage.setItem("lastmona_user_id", user.id);
       }
 
       setMode("editor");
@@ -361,10 +383,16 @@ export default function DashboardPage() {
                       setSelectedId(r.id);
                       setResume((r.resume as ResumeData) || null);
                       if (typeof window !== "undefined" && r.resume) {
-                        window.localStorage.setItem(
-                          "lastmona_resume",
-                          JSON.stringify(r.resume)
-                        );
+                        // Get current user to store with resume data
+                        supabase.auth.getUser().then(({ data: { user } }) => {
+                          if (user) {
+                            window.localStorage.setItem(
+                              "lastmona_resume",
+                              JSON.stringify(r.resume)
+                            );
+                            window.localStorage.setItem("lastmona_user_id", user.id);
+                          }
+                        });
                       }
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs ${
