@@ -111,6 +111,59 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
+      // First, check if the account already exists by attempting to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      // If sign-in succeeds, the account already exists
+      if (signInData.user && signInData.session) {
+        setError(
+          lang === "en"
+            ? "An account with this email already exists. Please sign in instead."
+            : "Un compte avec cet email existe déjà. Veuillez vous connecter à la place."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // If sign-in fails with "Invalid login credentials", it could mean:
+      // 1. Account doesn't exist (proceed with signup)
+      // 2. Wrong password (but account exists - we should still show error)
+      // 3. Account exists but email not confirmed (we should still show error)
+      
+      if (signInError) {
+        const errorMessage = signInError.message.toLowerCase();
+        // If it's not "invalid credentials", the account might exist with issues
+        if (
+          !errorMessage.includes("invalid login") &&
+          !errorMessage.includes("invalid credentials") &&
+          !errorMessage.includes("email not confirmed")
+        ) {
+          // Account might exist but has other issues
+          setError(
+            lang === "en"
+              ? "An account with this email may already exist. Please try signing in instead."
+              : "Un compte avec cet email pourrait déjà exister. Veuillez essayer de vous connecter à la place."
+          );
+          setLoading(false);
+          return;
+        }
+        
+        // If it's "email not confirmed", account exists
+        if (errorMessage.includes("email not confirmed")) {
+          setError(
+            lang === "en"
+              ? "An account with this email already exists. Please check your email to confirm your account, then sign in."
+              : "Un compte avec cet email existe déjà. Veuillez vérifier votre email pour confirmer votre compte, puis connectez-vous."
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Now attempt to sign up (account likely doesn't exist)
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
@@ -157,18 +210,12 @@ export default function SignUpPage() {
         return;
       }
 
-      // Additional check: If we have a user but no session and no email confirmation was sent,
-      // it might mean the user already exists. However, Supabase typically returns an error for this.
-      // But to be safe, we'll show the success message only if we're confident it's a new account.
-      
       // Check if email confirmation is required
       if (data.session) {
         // Auto-signed in (email confirmation disabled), redirect immediately
         router.replace("/dashboard");
       } else {
-        // Email confirmation required
-        // Note: If the user already exists, Supabase should have returned an error above.
-        // If we reach here, it's likely a new account that needs email confirmation.
+        // Email confirmation required - new account created
         setMessage(
           lang === "en"
             ? "Account created! Please check your email (including spam folder) to confirm your account. After confirmation, you can sign in with your password."
