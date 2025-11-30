@@ -67,20 +67,34 @@ export default function DashboardPage() {
       let localResume: ResumeData | null = null;
       let localPrompt: string | null = null;
 
-      // Load resume + prompt from localStorage if present
+      // Load resume + prompt from localStorage if present AND belongs to current user
       try {
         if (typeof window !== "undefined") {
-          const stored = window.localStorage.getItem("lastmona_resume");
-          const storedPrompt = window.localStorage.getItem("lastmona_prompt");
-          if (stored) {
-            localResume = JSON.parse(stored);
-          }
-          if (storedPrompt) {
-            localPrompt = storedPrompt;
+          const storedUserId = window.localStorage.getItem("lastmona_user_id");
+          // Only load localStorage data if it belongs to the current user
+          if (storedUserId === user.id) {
+            const stored = window.localStorage.getItem("lastmona_resume");
+            const storedPrompt = window.localStorage.getItem("lastmona_prompt");
+            if (stored) {
+              localResume = JSON.parse(stored);
+            }
+            if (storedPrompt) {
+              localPrompt = storedPrompt;
+            }
+          } else {
+            // Clear localStorage if it belongs to a different user
+            window.localStorage.removeItem("lastmona_resume");
+            window.localStorage.removeItem("lastmona_prompt");
+            window.localStorage.removeItem("lastmona_user_id");
           }
         }
       } catch {
-        // ignore parse errors
+        // ignore parse errors, but clear potentially corrupted data
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("lastmona_resume");
+          window.localStorage.removeItem("lastmona_prompt");
+          window.localStorage.removeItem("lastmona_user_id");
+        }
       }
 
       // Fetch existing resumes for this user
@@ -120,13 +134,12 @@ export default function DashboardPage() {
         setSelectedId(list[0].id);
         setResume((list[0].resume as ResumeData) || null);
         if (typeof window !== "undefined" && list[0].resume) {
-          window.localStorage.setItem(
-            "lastmona_resume",
-            JSON.stringify(list[0].resume)
-          );
+          // Store with user ID to ensure data isolation
+          window.localStorage.setItem("lastmona_resume", JSON.stringify(list[0].resume));
+          window.localStorage.setItem("lastmona_user_id", user.id);
         }
       } else if (localResume) {
-        // fallback: show local resume if no DB record yet
+        // fallback: show local resume if no DB record yet (only if it belongs to current user)
         setResume(localResume);
       } else {
         setResume(null);
@@ -183,7 +196,15 @@ export default function DashboardPage() {
     setResume(updated);
 
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("lastmona_resume", JSON.stringify(updated));
+      // Get current user to store with resume data
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      
+      if (user) {
+        window.localStorage.setItem("lastmona_resume", JSON.stringify(updated));
+        window.localStorage.setItem("lastmona_user_id", user.id);
+      }
     }
 
     if (!selectedId) return;
@@ -277,6 +298,7 @@ export default function DashboardPage() {
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem("lastmona_resume", JSON.stringify(generated));
+        window.localStorage.setItem("lastmona_user_id", user.id);
       }
 
       setMode("editor");
@@ -361,10 +383,16 @@ export default function DashboardPage() {
                       setSelectedId(r.id);
                       setResume((r.resume as ResumeData) || null);
                       if (typeof window !== "undefined" && r.resume) {
-                        window.localStorage.setItem(
-                          "lastmona_resume",
-                          JSON.stringify(r.resume)
-                        );
+                        // Get current user to store with resume data
+                        supabase.auth.getUser().then(({ data: { user } }) => {
+                          if (user) {
+                            window.localStorage.setItem(
+                              "lastmona_resume",
+                              JSON.stringify(r.resume)
+                            );
+                            window.localStorage.setItem("lastmona_user_id", user.id);
+                          }
+                        });
                       }
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs ${
@@ -625,45 +653,85 @@ export default function DashboardPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-800 mb-2">
-                      Main experience
-                    </h3>
-                    {(() => {
-                      const exp = (resume.experience && resume.experience[0]) || {};
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xs font-semibold text-gray-800">
+                        Work experience
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentList = resume.experience ?? [];
+                          const updated = {
+                            ...resume,
+                            experience: [...currentList, { title: "", company: "", period: "", description: "" }],
+                          };
+                          persistCurrentResume(updated);
+                        }}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        + Add experience
+                      </button>
+                    </div>
+                    {(resume.experience && resume.experience.length > 0 ? resume.experience : [{}]).map((exp, expIdx) => {
                       const updateExpField = (field: keyof typeof exp, value: string) => {
-                        const currentList = resume.experience ?? [{}];
+                        const currentList = resume.experience && resume.experience.length > 0 
+                          ? resume.experience 
+                          : [{}];
                         const newList = [...currentList];
-                        newList[0] = { ...newList[0], [field]: value };
+                        if (!newList[expIdx]) {
+                          newList[expIdx] = {};
+                        }
+                        newList[expIdx] = { ...newList[expIdx], [field]: value };
                         const updated = { ...resume, experience: newList };
                         persistCurrentResume(updated);
                       };
+                      const removeExp = () => {
+                        const currentList = resume.experience ?? [];
+                        const newList = currentList.filter((_, idx) => idx !== expIdx);
+                        const updated = { ...resume, experience: newList.length > 0 ? newList : undefined };
+                        persistCurrentResume(updated);
+                      };
                       return (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Job title
-                              </label>
-                              <input
-                                type="text"
-                                value={exp.title || ""}
-                                onChange={(e) => updateExpField("title", e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Company
-                              </label>
-                              <input
-                                type="text"
-                                value={exp.company || ""}
-                                onChange={(e) => updateExpField("company", e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                              />
-                            </div>
+                        <div key={expIdx} className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">
+                              Experience #{expIdx + 1}
+                            </span>
+                            {resume.experience && resume.experience.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={removeExp}
+                                className="text-xs text-red-600 hover:text-red-700"
+                              >
+                                Remove
+                              </button>
+                            )}
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Job title
+                                </label>
+                                <input
+                                  type="text"
+                                  value={exp.title || ""}
+                                  onChange={(e) => updateExpField("title", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Company
+                                </label>
+                                <input
+                                  type="text"
+                                  value={exp.company || ""}
+                                  onChange={(e) => updateExpField("company", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
+                            </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
                                 Period
@@ -673,29 +741,226 @@ export default function DashboardPage() {
                                 value={exp.period || ""}
                                 onChange={(e) => updateExpField("period", e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="e.g., 2020 - Present"
                               />
                             </div>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Responsibilities / achievements
-                            </label>
-                            <textarea
-                              value={exp.description || ""}
-                              onChange={(e) =>
-                                updateExpField("description", e.target.value)
-                              }
-                              rows={5}
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                            <p className="mt-1 text-[11px] text-gray-500">
-                              Each line will appear as a separate bullet point in your
-                              resume.
-                            </p>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Responsibilities / achievements
+                              </label>
+                              <textarea
+                                value={exp.description || ""}
+                                onChange={(e) =>
+                                  updateExpField("description", e.target.value)
+                                }
+                                rows={5}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              />
+                              <p className="mt-1 text-[11px] text-gray-500">
+                                Each line will appear as a separate bullet point in your
+                                resume.
+                              </p>
+                            </div>
                           </div>
                         </div>
                       );
-                    })()}
+                    })}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xs font-semibold text-gray-800">
+                        Education
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentList = resume.education ?? [];
+                          const updated = {
+                            ...resume,
+                            education: [...currentList, { degree: "", institution: "", period: "" }],
+                          };
+                          persistCurrentResume(updated);
+                        }}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        + Add education
+                      </button>
+                    </div>
+                    {(resume.education && resume.education.length > 0 ? resume.education : [{}]).map((edu, eduIdx) => {
+                      const updateEduField = (field: keyof typeof edu, value: string) => {
+                        const currentList = resume.education && resume.education.length > 0 
+                          ? resume.education 
+                          : [{}];
+                        const newList = [...currentList];
+                        if (!newList[eduIdx]) {
+                          newList[eduIdx] = {};
+                        }
+                        newList[eduIdx] = { ...newList[eduIdx], [field]: value };
+                        const updated = { ...resume, education: newList };
+                        persistCurrentResume(updated);
+                      };
+                      const removeEdu = () => {
+                        const currentList = resume.education ?? [];
+                        const newList = currentList.filter((_, idx) => idx !== eduIdx);
+                        const updated = { ...resume, education: newList.length > 0 ? newList : undefined };
+                        persistCurrentResume(updated);
+                      };
+                      return (
+                        <div key={eduIdx} className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">
+                              Education #{eduIdx + 1}
+                            </span>
+                            {resume.education && resume.education.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={removeEdu}
+                                className="text-xs text-red-600 hover:text-red-700"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Degree
+                                </label>
+                                <input
+                                  type="text"
+                                  value={edu.degree || ""}
+                                  onChange={(e) => updateEduField("degree", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Institution
+                                </label>
+                                <input
+                                  type="text"
+                                  value={edu.institution || ""}
+                                  onChange={(e) => updateEduField("institution", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Period
+                              </label>
+                              <input
+                                type="text"
+                                value={edu.period || ""}
+                                onChange={(e) => updateEduField("period", e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="e.g., 2015 - 2019"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xs font-semibold text-gray-800">
+                        Certifications
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentList = resume.certifications ?? [];
+                          const updated = {
+                            ...resume,
+                            certifications: [...currentList, { name: "", issuer: "", date: "" }],
+                          };
+                          persistCurrentResume(updated);
+                        }}
+                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        + Add certification
+                      </button>
+                    </div>
+                    {(resume.certifications && resume.certifications.length > 0 ? resume.certifications : [{}]).map((cert, certIdx) => {
+                      const updateCertField = (field: keyof typeof cert, value: string) => {
+                        const currentList = resume.certifications && resume.certifications.length > 0 
+                          ? resume.certifications 
+                          : [{}];
+                        const newList = [...currentList];
+                        if (!newList[certIdx]) {
+                          newList[certIdx] = {};
+                        }
+                        newList[certIdx] = { ...newList[certIdx], [field]: value };
+                        const updated = { ...resume, certifications: newList };
+                        persistCurrentResume(updated);
+                      };
+                      const removeCert = () => {
+                        const currentList = resume.certifications ?? [];
+                        const newList = currentList.filter((_, idx) => idx !== certIdx);
+                        const updated = { ...resume, certifications: newList.length > 0 ? newList : undefined };
+                        persistCurrentResume(updated);
+                      };
+                      return (
+                        <div key={certIdx} className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">
+                              Certification #{certIdx + 1}
+                            </span>
+                            {resume.certifications && resume.certifications.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={removeCert}
+                                className="text-xs text-red-600 hover:text-red-700"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Certification name
+                                </label>
+                                <input
+                                  type="text"
+                                  value={cert.name || ""}
+                                  onChange={(e) => updateCertField("name", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Issuer
+                                </label>
+                                <input
+                                  type="text"
+                                  value={cert.issuer || ""}
+                                  onChange={(e) => updateCertField("issuer", e.target.value)}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Date
+                              </label>
+                              <input
+                                type="text"
+                                value={cert.date || ""}
+                                onChange={(e) => updateCertField("date", e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="e.g., 2021"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div>
