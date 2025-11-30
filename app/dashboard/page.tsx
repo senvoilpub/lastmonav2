@@ -39,6 +39,7 @@ interface DbResume {
   prompt: string | null;
   resume: ResumeData | null;
   created_at: string;
+  is_public?: boolean;
 }
 
 export default function DashboardPage() {
@@ -52,6 +53,8 @@ export default function DashboardPage() {
   const [genError, setGenError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genLang, setGenLang] = useState<"en" | "fr">("en");
+  const [isTogglingPublic, setIsTogglingPublic] = useState(false);
+  const [lang, setLang] = useState<"en" | "fr">("en");
 
   useEffect(() => {
     const init = async () => {
@@ -190,6 +193,61 @@ export default function DashboardPage() {
     }
 
     pdf.save("lastmona-resume.pdf");
+  };
+
+  const handleTogglePublic = async () => {
+    if (!selectedId) return;
+
+    const currentResume = resumes.find((r) => r.id === selectedId);
+    if (!currentResume) return;
+
+    const newPublicStatus = !currentResume.is_public;
+    setIsTogglingPublic(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.replace("/signin");
+        return;
+      }
+
+      const response = await fetch("/api/toggle-resume-public", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          resumeId: selectedId,
+          isPublic: newPublicStatus,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update resume status");
+      }
+
+      // Update local state
+      setResumes((prev) =>
+        prev.map((r) =>
+          r.id === selectedId ? { ...r, is_public: newPublicStatus } : r
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling public status:", error);
+      alert(
+        lang === "en"
+          ? "Failed to update resume status. Please try again."
+          : "Échec de la mise à jour du statut du CV. Veuillez réessayer."
+      );
+    } finally {
+      setIsTogglingPublic(false);
+    }
   };
 
   const persistCurrentResume = async (updated: ResumeData) => {
@@ -454,14 +512,79 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            {mode === "editor" && resume && (
-              <button
-                type="button"
-                onClick={handleDownloadPdf}
-                className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
-              >
-                Download PDF
-              </button>
+            {mode === "editor" && resume && selectedId && (
+              <>
+                {(() => {
+                  const currentResume = resumes.find((r) => r.id === selectedId);
+                  const isPublic = currentResume?.is_public || false;
+                  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/resume/${selectedId}`;
+
+                  return (
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      {/* Toggle Switch */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600 hidden sm:inline">
+                          {lang === "en" ? "Public" : "Public"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleTogglePublic}
+                          disabled={isTogglingPublic}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                            isPublic ? "bg-indigo-600" : "bg-gray-200"
+                          } ${isTogglingPublic ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              isPublic ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                        <span className="text-xs text-gray-600 hidden sm:inline">
+                          {lang === "en" ? "Private" : "Privé"}
+                        </span>
+                      </div>
+
+                      {/* Share Link */}
+                      {isPublic && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                          <input
+                            type="text"
+                            readOnly
+                            value={publicUrl}
+                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                            className="text-xs text-gray-700 bg-transparent border-none outline-none w-32 sm:w-48"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(publicUrl);
+                              alert(
+                                lang === "en"
+                                  ? "Link copied to clipboard!"
+                                  : "Lien copié dans le presse-papiers !"
+                              );
+                            }}
+                            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                            title={lang === "en" ? "Copy link" : "Copier le lien"}
+                          >
+                            {lang === "en" ? "Copy" : "Copier"}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Download PDF Button */}
+                      <button
+                        type="button"
+                        onClick={handleDownloadPdf}
+                        className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+                      >
+                        {lang === "en" ? "Download PDF" : "Télécharger PDF"}
+                      </button>
+                    </div>
+                  );
+                })()}
+              </>
             )}
           </div>
         </header>
