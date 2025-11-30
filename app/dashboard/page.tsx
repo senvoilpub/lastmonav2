@@ -253,12 +253,18 @@ export default function DashboardPage() {
     setGenError(null);
 
     try {
+      // Get user ID (dashboard requires auth, so user should exist)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const userId = user?.id;
+
       const response = await fetch("/api/generate-resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ experience: trimmed, lang: genLang }),
+        body: JSON.stringify({ experience: trimmed, lang: genLang, userId }),
       });
 
       const data = await response.json();
@@ -269,11 +275,12 @@ export default function DashboardPage() {
 
       const generated: ResumeData = data.resume;
 
+      // Re-check user (already have userId from above, but need user object for DB insert)
       const {
-        data: { user },
+        data: { user: authUser },
       } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (!authUser) {
         router.replace("/signin");
         return;
       }
@@ -281,7 +288,7 @@ export default function DashboardPage() {
       const { data: inserted, error } = await supabase
         .from("resumes")
         .insert({
-          user_id: user.id,
+          user_id: authUser.id,
           prompt: trimmed,
           resume: generated,
         })
@@ -298,7 +305,7 @@ export default function DashboardPage() {
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem("lastmona_resume", JSON.stringify(generated));
-        window.localStorage.setItem("lastmona_user_id", user.id);
+        window.localStorage.setItem("lastmona_user_id", authUser.id);
       }
 
       setMode("editor");

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 type Lang = "en" | "fr";
+
+const MAX_ANONYMOUS_PROMPTS = 100;
 
 function buildGenericResume(lang: Lang) {
   if (lang === "fr") {
@@ -160,7 +163,8 @@ export async function POST(request: NextRequest) {
     const {
       experience,
       lang,
-    }: { experience?: string; lang?: Lang } = await request.json();
+      userId,
+    }: { experience?: string; lang?: Lang; userId?: string } = await request.json();
 
     if (!experience || typeof experience !== "string") {
       return NextResponse.json(
@@ -170,6 +174,53 @@ export async function POST(request: NextRequest) {
     }
 
     language = lang === "fr" ? "fr" : "en";
+
+    // Store prompt for anonymous users (data collection only)
+    // Only store if user is NOT authenticated (no userId provided)
+    if (!userId) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        });
+
+        // Store the prompt (fire and forget - don't block the main flow)
+        (async () => {
+          try {
+            await supabaseAdmin
+              .from("anonymous_prompts")
+              .insert([{ prompt: experience.trim() }]);
+
+            // After inserting, check if we need to delete old records
+            const { data: allRecords } = await supabaseAdmin
+              .from("anonymous_prompts")
+              .select("id, created_at")
+              .order("created_at", { ascending: true });
+
+            if (allRecords && allRecords.length > MAX_ANONYMOUS_PROMPTS) {
+              const recordsToDelete = allRecords.length - MAX_ANONYMOUS_PROMPTS;
+              const idsToDelete = allRecords
+                .slice(0, recordsToDelete)
+                .map((r: { id: string; created_at: string }) => r.id);
+
+              if (idsToDelete.length > 0) {
+                await supabaseAdmin
+                  .from("anonymous_prompts")
+                  .delete()
+                  .in("id", idsToDelete);
+              }
+            }
+          } catch {
+            // Silently fail - don't block the main flow if storage fails
+          }
+        })();
+      }
+    }
 
     // Detect suspicious or invalid inputs
     const suspiciousPatterns = [

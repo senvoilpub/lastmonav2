@@ -64,12 +64,23 @@ export default function Home() {
     setIsFallbackResume(false);
 
     try {
+      // Get user ID if authenticated
+      let userId: string | undefined;
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        userId = user?.id;
+      } catch {
+        // User not authenticated, userId remains undefined
+      }
+
       const response = await fetch("/api/generate-resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ experience: input, lang }),
+        body: JSON.stringify({ experience: input, lang, userId }),
       });
 
       const data = await response.json();
