@@ -197,80 +197,77 @@ export default function SignInPage() {
             </div>
 
             {/* Magic Link Option - Primary */}
-            <div className="mb-6">
-              <form onSubmit={handleMagicLink} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="email-magic"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    {lang === "en" ? "Email address" : "Adresse email"}
-                  </label>
-                  <input
-                    id="email-magic"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    required
-                    disabled={authMethod === "password"}
-                  />
-                </div>
-
-                {authMethod === "magic" && (
-                  <>
-                    {error && (
-                      <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                        {error}
-                      </p>
-                    )}
-
-                    {message && (
-                      <p className="text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
-                        {message}
-                      </p>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            {authMethod === "magic" && (
+              <div className="mb-6">
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="email-magic"
+                      className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      {loading
-                        ? lang === "en"
-                          ? "Sending link..."
-                          : "Envoi du lien..."
-                        : lang === "en"
-                        ? "Continue with email"
-                        : "Continuer avec l'email"}
-                    </button>
+                      {lang === "en" ? "Email address" : "Adresse email"}
+                    </label>
+                    <input
+                      id="email-magic"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
 
-                    <p className="text-xs text-center text-gray-500 flex items-center justify-center gap-1.5">
-                      <svg
-                        className="w-4 h-4 text-indigo-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
-                      <span>
-                        {lang === "en"
-                          ? "A link will be sent to your email (recommended for security)"
-                          : "Un lien sera envoyé à votre email (recommandé pour la sécurité)"}
-                      </span>
+                  {error && (
+                    <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                      {error}
                     </p>
-                  </>
-                )}
-              </form>
-            </div>
+                  )}
+
+                  {message && (
+                    <p className="text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                      {message}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {loading
+                      ? lang === "en"
+                        ? "Sending link..."
+                        : "Envoi du lien..."
+                      : lang === "en"
+                      ? "Continue with email"
+                      : "Continuer avec l'email"}
+                  </button>
+
+                  <p className="text-xs text-center text-gray-500 flex items-center justify-center gap-1.5">
+                    <svg
+                      className="w-4 h-4 text-indigo-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    <span>
+                      {lang === "en"
+                        ? "A link will be sent to your email (recommended for security)"
+                        : "Un lien sera envoyé à votre email (recommandé pour la sécurité)"}
+                    </span>
+                  </p>
+                </form>
+              </div>
+            )}
 
             {/* Divider */}
             {authMethod === "magic" && (
