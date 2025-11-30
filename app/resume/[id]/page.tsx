@@ -186,7 +186,7 @@ export default function PublicResumePage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 md:p-10">
-          <ResumeDisplay resume={resume} mode="full" />
+          <ResumeDisplay resumeData={resume} isLoading={false} mode="full" />
         </div>
 
         {/* Footer note */}
