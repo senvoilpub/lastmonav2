@@ -166,24 +166,39 @@ export default function ResumeDisplay({
     );
   }
 
-  // Merge with dummy data for missing fields
+  // Merge with dummy data for missing fields, but don't use dummy data for explicitly removed sections
+  // If a section is undefined or empty array, don't include it (so it won't display)
+  // Only use dummy data if this is a brand new resume with no data at all
+  const isNewResume = !resumeData || (
+    !resumeData.name && 
+    !resumeData.email && 
+    !resumeData.phone && 
+    !resumeData.summary &&
+    (!resumeData.experience || resumeData.experience.length === 0) &&
+    (!resumeData.education || resumeData.education.length === 0) &&
+    (!resumeData.certifications || resumeData.certifications.length === 0) &&
+    (!resumeData.skills || resumeData.skills.length === 0)
+  );
+
   const data: ResumeData = {
-    name: resumeData.name || DUMMY_DATA.name,
-    email: resumeData.email || DUMMY_DATA.email,
-    phone: resumeData.phone || DUMMY_DATA.phone,
-    summary: resumeData.summary || DUMMY_DATA.summary,
-    experience: resumeData.experience && resumeData.experience.length > 0
+    name: resumeData?.name || DUMMY_DATA.name,
+    email: resumeData?.email || DUMMY_DATA.email,
+    phone: resumeData?.phone || DUMMY_DATA.phone,
+    summary: resumeData?.summary || DUMMY_DATA.summary,
+    // If section is undefined or empty, set to undefined (won't display)
+    // Only use dummy data if this is a completely new resume (no data at all)
+    experience: resumeData?.experience && resumeData.experience.length > 0
       ? resumeData.experience
-      : DUMMY_DATA.experience,
-    education: resumeData.education && resumeData.education.length > 0
+      : (isNewResume ? DUMMY_DATA.experience : undefined),
+    education: resumeData?.education && resumeData.education.length > 0
       ? resumeData.education
-      : DUMMY_DATA.education,
-    certifications: resumeData.certifications && resumeData.certifications.length > 0
+      : (isNewResume ? DUMMY_DATA.education : undefined),
+    certifications: resumeData?.certifications && resumeData.certifications.length > 0
       ? resumeData.certifications
-      : DUMMY_DATA.certifications,
-    skills: resumeData.skills && resumeData.skills.length > 0
+      : (isNewResume ? DUMMY_DATA.certifications : undefined),
+    skills: resumeData?.skills && resumeData.skills.length > 0
       ? resumeData.skills
-      : DUMMY_DATA.skills,
+      : (isNewResume ? DUMMY_DATA.skills : undefined),
   };
 
   // Check if field is placeholder
@@ -243,11 +258,12 @@ export default function ResumeDisplay({
         </section>
 
         {/* Experience */}
-        <section className="mb-3">
-          <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-            {sectionHeaders[lang].experience}
-          </h2>
-          {data.experience?.slice(0, 2).map((exp, idx) => (
+        {data.experience && data.experience.length > 0 && (
+          <section className="mb-3">
+            <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
+              {sectionHeaders[lang].experience}
+            </h2>
+            {data.experience.slice(0, 2).map((exp, idx) => (
             <div key={idx} className="mb-2">
               <div className="flex justify-between items-start mb-1">
                 <div>
@@ -275,14 +291,16 @@ export default function ResumeDisplay({
               </ul>
             </div>
           ))}
-        </section>
+          </section>
+        )}
 
         {/* Education */}
-        <section className="mb-3">
-          <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
-            {sectionHeaders[lang].education}
-          </h2>
-          {data.education?.slice(0, 2).map((edu, idx) => (
+        {data.education && data.education.length > 0 && (
+          <section className="mb-3">
+            <h2 className="text-sm font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">
+              {sectionHeaders[lang].education}
+            </h2>
+            {data.education.slice(0, 2).map((edu, idx) => (
             <div key={idx} className="mb-2">
               <div className="flex justify-between items-start">
                 <div>
@@ -299,7 +317,8 @@ export default function ResumeDisplay({
               </div>
             </div>
           ))}
-        </section>
+          </section>
+        )}
 
         {/* Certifications */}
         {data.certifications && data.certifications.length > 0 && (

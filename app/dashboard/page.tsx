@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [genError, setGenError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genLang, setGenLang] = useState<"en" | "fr">("en");
+  const [editorLang, setEditorLang] = useState<"en" | "fr">("en");
 
   useEffect(() => {
     const init = async () => {
@@ -317,7 +318,9 @@ export default function DashboardPage() {
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-sm text-gray-500">Loading your dashboard...</p>
+        <p className="text-sm text-gray-500">
+          {editorLang === "en" ? "Loading your dashboard..." : "Chargement de votre tableau de bord..."}
+        </p>
       </div>
     );
   }
@@ -345,23 +348,25 @@ export default function DashboardPage() {
         {/* Middle: Dashboard + Resumes - Scrollable */}
         <nav className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-2 min-h-0">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">
-            Main
+            {editorLang === "en" ? "Main" : "Principal"}
           </div>
           <button
             type="button"
             onClick={() => setMode("generator")}
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium"
           >
-            <span>Dashboard</span>
+            <span>{editorLang === "en" ? "Dashboard" : "Tableau de bord"}</span>
           </button>
           <div className="mt-6">
             <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 sm:px-2 mb-2">
-              All resumes
+              {editorLang === "en" ? "All resumes" : "Tous les CV"}
             </div>
             <div className="space-y-1">
               {resumes.length === 0 && (
                 <p className="text-[11px] text-gray-500 px-2">
-                  No resumes yet. Generate one from the homepage.
+                  {editorLang === "en"
+                    ? "No resumes yet. Generate one from the homepage."
+                    : "Aucun CV pour l'instant. Générez-en un depuis la page d'accueil."}
                 </p>
               )}
               {resumes.map((r) => {
@@ -372,7 +377,7 @@ export default function DashboardPage() {
                   day: "numeric",
                 });
                 const name =
-                  (r.resume && (r.resume as ResumeData).name) || "Untitled resume";
+                  (r.resume && (r.resume as ResumeData).name) || (editorLang === "en" ? "Untitled resume" : "CV sans titre");
                 const isActive = r.id === selectedId;
                 return (
                   <button
@@ -418,7 +423,7 @@ export default function DashboardPage() {
             href="/profile"
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
           >
-            <span>Profile</span>
+            <span>{editorLang === "en" ? "Profile" : "Profil"}</span>
           </Link>
           <button
             type="button"
@@ -428,7 +433,7 @@ export default function DashboardPage() {
             }}
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
           >
-            <span>Log out</span>
+            <span>{editorLang === "en" ? "Log out" : "Déconnexion"}</span>
           </button>
         </div>
       </aside>
@@ -438,22 +443,52 @@ export default function DashboardPage() {
         <header className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              Dashboard
+              {editorLang === "en" ? "Dashboard" : "Tableau de bord"}
             </h1>
             <p className="text-sm text-gray-600">
               {mode === "generator"
-                ? "Create a new resume from your experience."
-                : "View, edit and export your generated resume."}
+                ? editorLang === "en"
+                  ? "Create a new resume from your experience."
+                  : "Créez un nouveau CV à partir de votre expérience."
+                : editorLang === "en"
+                ? "View, edit and export your generated resume."
+                : "Visualisez, modifiez et exportez votre CV généré."}
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            {mode === "editor" && (
+              <div className="inline-flex items-center rounded-full bg-gray-100 px-1 py-1 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setEditorLang("en")}
+                  className={`px-2.5 py-0.5 rounded-full ${
+                    editorLang === "en"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-600 hover:text-indigo-600"
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditorLang("fr")}
+                  className={`px-2.5 py-0.5 rounded-full ${
+                    editorLang === "fr"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-600 hover:text-indigo-600"
+                  }`}
+                >
+                  FR
+                </button>
+              </div>
+            )}
             {mode === "editor" && resume && (
               <button
                 type="button"
                 onClick={handleDownloadPdf}
                 className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
               >
-                Download PDF
+                {editorLang === "en" ? "Download PDF" : "Télécharger PDF"}
               </button>
             )}
           </div>
@@ -578,19 +613,20 @@ export default function DashboardPage() {
           <section className="border-b lg:border-b-0 lg:border-r border-gray-200 max-h-full overflow-y-auto">
             <div className="px-4 sm:px-6 py-5">
               <h2 className="text-sm font-semibold text-gray-900 mb-3">
-                Resume data
+                {editorLang === "en" ? "Resume data" : "Données du CV"}
               </h2>
 
               {!resume ? (
                 <p className="text-sm text-gray-500">
-                  No resume found yet. Generate one from the homepage and then
-                  sign in to see it here.
+                  {editorLang === "en"
+                    ? "No resume found yet. Generate one from the homepage and then sign in to see it here."
+                    : "Aucun CV trouvé pour l'instant. Générez-en un depuis la page d'accueil puis connectez-vous pour le voir ici."}
                 </p>
               ) : (
                 <div className="space-y-5">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Name
+                      {editorLang === "en" ? "Name" : "Nom"}
                     </label>
                     <input
                       type="text"
@@ -606,7 +642,7 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Email
+                        {editorLang === "en" ? "Email" : "Email"}
                       </label>
                       <input
                         type="email"
@@ -620,7 +656,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Phone
+                        {editorLang === "en" ? "Phone" : "Téléphone"}
                       </label>
                       <input
                         type="text"
@@ -636,7 +672,7 @@ export default function DashboardPage() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Professional summary
+                      {editorLang === "en" ? "Professional summary" : "Résumé professionnel"}
                     </label>
                     <textarea
                       value={resume.summary || ""}
@@ -648,29 +684,46 @@ export default function DashboardPage() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                     <p className="mt-1 text-[11px] text-gray-500">
-                      Keep it short and focused on your key strengths.
+                      {editorLang === "en"
+                        ? "Keep it short and focused on your key strengths."
+                        : "Soyez concis et concentrez-vous sur vos points forts."}
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xs font-semibold text-gray-800">
-                        Work experience
+                        {editorLang === "en" ? "Work experience" : "Expérience professionnelle"}
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentList = resume.experience ?? [];
-                          const updated = {
-                            ...resume,
-                            experience: [...currentList, { title: "", company: "", period: "", description: "" }],
-                          };
-                          persistCurrentResume(updated);
-                        }}
-                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                      >
-                        + Add experience
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {resume.experience && resume.experience.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = { ...resume, experience: undefined };
+                              persistCurrentResume(updated);
+                            }}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium"
+                            title={editorLang === "en" ? "Remove section" : "Supprimer la section"}
+                          >
+                            {editorLang === "en" ? "Remove section" : "Supprimer section"}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentList = resume.experience ?? [];
+                            const updated = {
+                              ...resume,
+                              experience: [...currentList, { title: "", company: "", period: "", description: "" }],
+                            };
+                            persistCurrentResume(updated);
+                          }}
+                          className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                        >
+                          {editorLang === "en" ? "+ Add experience" : "+ Ajouter expérience"}
+                        </button>
+                      </div>
                     </div>
                     {(resume.experience && resume.experience.length > 0 ? resume.experience : [{}]).map((exp, expIdx) => {
                       const updateExpField = (field: keyof typeof exp, value: string) => {
@@ -695,23 +748,21 @@ export default function DashboardPage() {
                         <div key={expIdx} className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium text-gray-600">
-                              Experience #{expIdx + 1}
+                              {editorLang === "en" ? "Experience" : "Expérience"} #{expIdx + 1}
                             </span>
-                            {resume.experience && resume.experience.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={removeExp}
-                                className="text-xs text-red-600 hover:text-red-700"
-                              >
-                                Remove
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={removeExp}
+                              className="text-xs text-red-600 hover:text-red-700"
+                            >
+                              {editorLang === "en" ? "Remove" : "Supprimer"}
+                            </button>
                           </div>
                           <div className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Job title
+                                  {editorLang === "en" ? "Job title" : "Poste"}
                                 </label>
                                 <input
                                   type="text"
@@ -722,7 +773,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Company
+                                  {editorLang === "en" ? "Company" : "Entreprise"}
                                 </label>
                                 <input
                                   type="text"
@@ -734,19 +785,19 @@ export default function DashboardPage() {
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Period
+                                {editorLang === "en" ? "Period" : "Période"}
                               </label>
                               <input
                                 type="text"
                                 value={exp.period || ""}
                                 onChange={(e) => updateExpField("period", e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="e.g., 2020 - Present"
+                                placeholder={editorLang === "en" ? "e.g., 2020 - Present" : "ex. 2020 - Aujourd'hui"}
                               />
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Responsibilities / achievements
+                                {editorLang === "en" ? "Responsibilities / achievements" : "Responsabilités / réalisations"}
                               </label>
                               <textarea
                                 value={exp.description || ""}
@@ -757,8 +808,9 @@ export default function DashboardPage() {
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               />
                               <p className="mt-1 text-[11px] text-gray-500">
-                                Each line will appear as a separate bullet point in your
-                                resume.
+                                {editorLang === "en"
+                                  ? "Each line will appear as a separate bullet point in your resume."
+                                  : "Chaque ligne apparaîtra comme un point distinct dans votre CV."}
                               </p>
                             </div>
                           </div>
@@ -770,22 +822,37 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xs font-semibold text-gray-800">
-                        Education
+                        {editorLang === "en" ? "Education" : "Formation"}
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentList = resume.education ?? [];
-                          const updated = {
-                            ...resume,
-                            education: [...currentList, { degree: "", institution: "", period: "" }],
-                          };
-                          persistCurrentResume(updated);
-                        }}
-                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                      >
-                        + Add education
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {resume.education && resume.education.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = { ...resume, education: undefined };
+                              persistCurrentResume(updated);
+                            }}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium"
+                            title={editorLang === "en" ? "Remove section" : "Supprimer la section"}
+                          >
+                            {editorLang === "en" ? "Remove section" : "Supprimer section"}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentList = resume.education ?? [];
+                            const updated = {
+                              ...resume,
+                              education: [...currentList, { degree: "", institution: "", period: "" }],
+                            };
+                            persistCurrentResume(updated);
+                          }}
+                          className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                        >
+                          {editorLang === "en" ? "+ Add education" : "+ Ajouter formation"}
+                        </button>
+                      </div>
                     </div>
                     {(resume.education && resume.education.length > 0 ? resume.education : [{}]).map((edu, eduIdx) => {
                       const updateEduField = (field: keyof typeof edu, value: string) => {
@@ -810,23 +877,21 @@ export default function DashboardPage() {
                         <div key={eduIdx} className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium text-gray-600">
-                              Education #{eduIdx + 1}
+                              {editorLang === "en" ? "Education" : "Formation"} #{eduIdx + 1}
                             </span>
-                            {resume.education && resume.education.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={removeEdu}
-                                className="text-xs text-red-600 hover:text-red-700"
-                              >
-                                Remove
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={removeEdu}
+                              className="text-xs text-red-600 hover:text-red-700"
+                            >
+                              {editorLang === "en" ? "Remove" : "Supprimer"}
+                            </button>
                           </div>
                           <div className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Degree
+                                  {editorLang === "en" ? "Degree" : "Diplôme"}
                                 </label>
                                 <input
                                   type="text"
@@ -837,7 +902,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Institution
+                                  {editorLang === "en" ? "Institution" : "Établissement"}
                                 </label>
                                 <input
                                   type="text"
@@ -849,14 +914,14 @@ export default function DashboardPage() {
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Period
+                                {editorLang === "en" ? "Period" : "Période"}
                               </label>
                               <input
                                 type="text"
                                 value={edu.period || ""}
                                 onChange={(e) => updateEduField("period", e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="e.g., 2015 - 2019"
+                                placeholder={editorLang === "en" ? "e.g., 2015 - 2019" : "ex. 2015 - 2019"}
                               />
                             </div>
                           </div>
@@ -868,22 +933,37 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xs font-semibold text-gray-800">
-                        Certifications
+                        {editorLang === "en" ? "Certifications" : "Certifications"}
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentList = resume.certifications ?? [];
-                          const updated = {
-                            ...resume,
-                            certifications: [...currentList, { name: "", issuer: "", date: "" }],
-                          };
-                          persistCurrentResume(updated);
-                        }}
-                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                      >
-                        + Add certification
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {resume.certifications && resume.certifications.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = { ...resume, certifications: undefined };
+                              persistCurrentResume(updated);
+                            }}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium"
+                            title={editorLang === "en" ? "Remove section" : "Supprimer la section"}
+                          >
+                            {editorLang === "en" ? "Remove section" : "Supprimer section"}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentList = resume.certifications ?? [];
+                            const updated = {
+                              ...resume,
+                              certifications: [...currentList, { name: "", issuer: "", date: "" }],
+                            };
+                            persistCurrentResume(updated);
+                          }}
+                          className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                        >
+                          {editorLang === "en" ? "+ Add certification" : "+ Ajouter certification"}
+                        </button>
+                      </div>
                     </div>
                     {(resume.certifications && resume.certifications.length > 0 ? resume.certifications : [{}]).map((cert, certIdx) => {
                       const updateCertField = (field: keyof typeof cert, value: string) => {
@@ -908,23 +988,21 @@ export default function DashboardPage() {
                         <div key={certIdx} className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium text-gray-600">
-                              Certification #{certIdx + 1}
+                              {editorLang === "en" ? "Certification" : "Certification"} #{certIdx + 1}
                             </span>
-                            {resume.certifications && resume.certifications.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={removeCert}
-                                className="text-xs text-red-600 hover:text-red-700"
-                              >
-                                Remove
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={removeCert}
+                              className="text-xs text-red-600 hover:text-red-700"
+                            >
+                              {editorLang === "en" ? "Remove" : "Supprimer"}
+                            </button>
                           </div>
                           <div className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Certification name
+                                  {editorLang === "en" ? "Certification name" : "Nom de la certification"}
                                 </label>
                                 <input
                                   type="text"
@@ -935,7 +1013,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                                  Issuer
+                                  {editorLang === "en" ? "Issuer" : "Organisme"}
                                 </label>
                                 <input
                                   type="text"
@@ -947,14 +1025,14 @@ export default function DashboardPage() {
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Date
+                                {editorLang === "en" ? "Date" : "Date"}
                               </label>
                               <input
                                 type="text"
                                 value={cert.date || ""}
                                 onChange={(e) => updateCertField("date", e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="e.g., 2021"
+                                placeholder={editorLang === "en" ? "e.g., 2021" : "ex. 2021"}
                               />
                             </div>
                           </div>
@@ -965,7 +1043,7 @@ export default function DashboardPage() {
 
                   <div>
                     <h3 className="text-xs font-semibold text-gray-800 mb-2">
-                      Skills
+                      {editorLang === "en" ? "Skills" : "Compétences"}
                     </h3>
                     <textarea
                       value={(resume.skills || []).join(", ")}
@@ -981,7 +1059,9 @@ export default function DashboardPage() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                     <p className="mt-1 text-[11px] text-gray-500">
-                      Separate skills with commas (e.g. React, TypeScript, SQL).
+                      {editorLang === "en"
+                        ? "Separate skills with commas (e.g. React, TypeScript, SQL)."
+                        : "Séparez les compétences par des virgules (ex. React, TypeScript, SQL)."}
                     </p>
                   </div>
                 </div>
