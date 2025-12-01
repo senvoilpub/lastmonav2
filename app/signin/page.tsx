@@ -262,7 +262,7 @@ export default function SignInPage() {
               </button>
             </div>
 
-            {/* Sign in with Email Button */}
+            {/* Email me a one-time link Button */}
             <div className="mb-6">
               {!showEmailForm ? (
                 <button
@@ -284,13 +284,13 @@ export default function SignInPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                     />
                   </svg>
                   <span>
                     {lang === "en"
-                      ? "Sign in with email"
-                      : "Se connecter avec l'email"}
+                      ? "Email me a one-time link"
+                      : "M'envoyer un lien unique par email"}
                   </span>
                 </button>
               ) : (
@@ -300,7 +300,9 @@ export default function SignInPage() {
                       htmlFor="email-magic"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      {lang === "en" ? "Email address" : "Adresse email"}
+                      {lang === "en"
+                        ? "Where should we send the link to?"
+                        : "Où devons-nous envoyer le lien ?"}
                     </label>
                     <input
                       id="email-magic"
@@ -337,8 +339,8 @@ export default function SignInPage() {
                           ? "Sending link..."
                           : "Envoi du lien..."
                         : lang === "en"
-                        ? "Send sign-in link"
-                        : "Envoyer le lien de connexion"}
+                        ? "Send link"
+                        : "Envoyer le lien"}
                     </button>
                     <button
                       type="button"
@@ -353,27 +355,6 @@ export default function SignInPage() {
                       {lang === "en" ? "Cancel" : "Annuler"}
                     </button>
                   </div>
-
-                  <p className="text-xs text-center text-gray-500 flex items-center justify-center gap-1.5">
-                    <svg
-                      className="w-4 h-4 text-indigo-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                    <span>
-                      {lang === "en"
-                        ? "A link will be sent to your email"
-                        : "Un lien sera envoyé à votre email"}
-                    </span>
-                  </p>
                 </form>
               )}
             </div>
