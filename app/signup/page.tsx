@@ -469,21 +469,24 @@ export default function SignUpPage() {
               )}
             </div>
 
-            {/* Divider */}
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+            {/* Divider - Only show when email form is not expanded */}
+            {!showEmailForm && (
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">
+                    {lang === "en" ? "Or" : "Ou"}
+                  </span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">
-                  {lang === "en" ? "Or" : "Ou"}
-                </span>
-              </div>
-            </div>
+            )}
 
-            {/* Sign up with Email & Password */}
-            <div>
-              <form onSubmit={handlePasswordSignUp} className="space-y-4">
+            {/* Sign up with Email & Password - Only show when email form is not expanded */}
+            {!showEmailForm && (
+              <div>
+                <form onSubmit={handlePasswordSignUp} className="space-y-4">
                 <div>
                   <label
                     htmlFor="email-password"
@@ -555,7 +558,8 @@ export default function SignUpPage() {
                     : "S'inscrire"}
                 </button>
               </form>
-            </div>
+              </div>
+            )}
 
             {/* Sign In Link */}
             <div className="mt-8 pt-6 border-t border-gray-200">
