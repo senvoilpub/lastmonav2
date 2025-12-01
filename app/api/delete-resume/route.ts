@@ -76,16 +76,31 @@ export async function POST(request: Request) {
       },
     });
 
-    // Delete the resume by setting user_id to null (soft delete)
+    // Anonymous user ID for deleted/anonymized resumes
+    const ANONYMOUS_USER_ID = "ec3466d8-a443-4a2d-8a3e-c84ce0f931ac";
+
+    // Verify anonymous user ID is set
+    if (!ANONYMOUS_USER_ID) {
+      console.error("ANONYMOUS_USER_ID is not set");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    console.log("Deleting resume:", resumeId, "Setting user_id to:", ANONYMOUS_USER_ID);
+
+    // Delete the resume by setting user_id to anonymous user (soft delete)
     // Using admin client to bypass RLS
     const { error: deleteError } = await supabaseAdmin
       .from("resumes")
-      .update({ user_id: null })
+      .update({ user_id: ANONYMOUS_USER_ID })
       .eq("id", resumeId)
       .eq("user_id", user.id);
 
     if (deleteError) {
       console.error("Error deleting resume:", deleteError);
+      console.error("Attempted to set user_id to:", ANONYMOUS_USER_ID);
       return NextResponse.json(
         { error: "Failed to delete resume" },
         { status: 500 }
