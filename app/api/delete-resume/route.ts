@@ -5,8 +5,9 @@ export async function POST(request: Request) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Create Supabase client with user's auth token
+    // Create Supabase client with user's auth token for verification
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: { Authorization: authHeader },
@@ -67,8 +68,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Use service role key to bypass RLS for the update operation
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
     // Delete the resume by setting user_id to null (soft delete)
-    const { error: deleteError } = await supabase
+    // Using admin client to bypass RLS
+    const { error: deleteError } = await supabaseAdmin
       .from("resumes")
       .update({ user_id: null })
       .eq("id", resumeId)
