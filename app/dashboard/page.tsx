@@ -283,10 +283,71 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteResume = async (resumeId: string) => {
+    if (
+      !confirm(
+        lang === "en"
+          ? "Are you sure you want to delete this resume? This action cannot be undone."
+          : "Êtes-vous sûr de vouloir supprimer ce CV ? Cette action est irréversible."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.replace("/signin");
+        return;
+      }
+
+      const response = await fetch("/api/delete-resume", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ resumeId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete resume");
+      }
+
+      // Remove from local state
+      setResumes((prev) => prev.filter((r) => r.id !== resumeId));
+
+      // If deleted resume was selected, clear selection
+      if (selectedId === resumeId) {
+        setSelectedId(null);
+        setResume(null);
+        setMode("generator");
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("lastmona_resume");
+          window.localStorage.removeItem("lastmona_prompt");
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting resume:", error);
+      alert(
+        lang === "en"
+          ? "Failed to delete resume. Please try again."
+          : "Échec de la suppression du CV. Veuillez réessayer."
+      );
+    }
+  };
+
   const handleCreateResume = async () => {
-    if (resumes.length >= 3) {
+    if (resumes.length >= 20) {
       setGenError(
-        "You’ve reached the limit of resumes you can create for now. We’re working hard to let you create more soon."
+        lang === "en"
+          ? "You've reached the limit of 20 resumes. Please delete one to create a new one."
+          : "Vous avez atteint la limite de 20 CV. Veuillez en supprimer un pour en créer un nouveau."
       );
       return;
     }
@@ -440,37 +501,66 @@ export default function DashboardPage() {
                   (r.resume && (r.resume as ResumeData).name) || "Untitled resume";
                 const isActive = r.id === selectedId;
                 return (
-                  <button
+                  <div
                     key={r.id}
-                    type="button"
-                    onClick={() => {
-                      setMode("editor");
-                      setSelectedId(r.id);
-                      setResume((r.resume as ResumeData) || null);
-                      if (typeof window !== "undefined" && r.resume) {
-                        // Get current user to store with resume data
-                        supabase.auth.getUser().then(({ data: { user } }) => {
-                          if (user) {
-                            window.localStorage.setItem(
-                              "lastmona_resume",
-                              JSON.stringify(r.resume)
-                            );
-                            window.localStorage.setItem("lastmona_user_id", user.id);
-                          }
-                        });
-                      }
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs ${
-                      isActive
-                        ? "bg-indigo-50 text-indigo-700 font-semibold"
-                        : "text-gray-700 hover:bg-gray-50"
+                    className={`group flex items-center gap-2 ${
+                      isActive ? "bg-indigo-50" : ""
                     }`}
                   >
-                    <div className="truncate">{name}</div>
-                    <div className="text-[10px] text-gray-400">
-                      {labelDate}
-                    </div>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("editor");
+                        setSelectedId(r.id);
+                        setResume((r.resume as ResumeData) || null);
+                        if (typeof window !== "undefined" && r.resume) {
+                          // Get current user to store with resume data
+                          supabase.auth.getUser().then(({ data: { user } }) => {
+                            if (user) {
+                              window.localStorage.setItem(
+                                "lastmona_resume",
+                                JSON.stringify(r.resume)
+                              );
+                              window.localStorage.setItem("lastmona_user_id", user.id);
+                            }
+                          });
+                        }
+                      }}
+                      className={`flex-1 text-left px-3 py-2 rounded-lg text-xs ${
+                        isActive
+                          ? "bg-indigo-50 text-indigo-700 font-semibold"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="truncate">{name}</div>
+                      <div className="text-[10px] text-gray-400">
+                        {labelDate}
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteResume(r.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-600 transition-opacity"
+                      title={lang === "en" ? "Delete resume" : "Supprimer le CV"}
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -622,15 +712,15 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {resumes.length >= 3 && (
+              {resumes.length >= 20 && (
                 <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   {genLang === "en"
-                    ? "You’ve reached the limit of resumes you can create for now. We’re working hard to let you create more CVs soon."
-                    : "Vous avez atteint pour l’instant la limite de CV que vous pouvez créer. Nous travaillons pour vous permettre d’en créer davantage bientôt."}
+                    ? "You've reached the limit of 20 resumes. Please delete one to create a new one."
+                    : "Vous avez atteint la limite de 20 CV. Veuillez en supprimer un pour en créer un nouveau."}
                 </div>
               )}
 
-              {resumes.length < 3 && (
+              {resumes.length < 20 && (
                 <>
                   <p className="text-xs text-gray-600 mb-2">
                     {genLang === "en"
@@ -694,7 +784,7 @@ export default function DashboardPage() {
                 </>
               )}
 
-              {resumes.length >= 3 && (
+              {resumes.length >= 20 && (
                 <p className="mt-3 text-[11px] text-gray-500">
                   {genLang === "en"
                     ? "You can still open and edit your existing resumes from the list on the left."
