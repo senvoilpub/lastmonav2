@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If user is authenticated, extract and store experiences
+    // If user is authenticated, get existing experiences and detect new ones
     if (userId) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -299,13 +299,83 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Extract experiences from the input text (fire and forget)
+        // Get existing experiences for the user
+        const { data: existingExperiences } = await supabaseAdmin
+          .from("user_experiences")
+          .select("title, company, period, description")
+          .eq("user_id", userId);
+
+        // Send existing experiences + new input to AI to detect NEW experiences
         (async () => {
           try {
-            const extracted = await extractExperiencesFromText(experience.trim());
+            const existingExpText = existingExperiences
+              ?.map(
+                (exp) =>
+                  `${exp.title || ""} at ${exp.company || ""} (${exp.period || ""}): ${exp.description || ""}`
+              )
+              .join("\n") || "";
 
-            if (extracted.length > 0) {
-              const experiencesToInsert = extracted.map((exp) => ({
+            const prompt = `The user has the following existing work experiences in their profile:
+${existingExpText}
+
+Now they've provided this new input to generate a resume:
+${experience.trim()}
+
+Analyze the new input and extract ONLY the work experiences that are NEW and not already in the existing experiences list above. Return ONLY a valid JSON array of NEW experience objects. Each experience should have: title, company, period, and description fields.
+
+If all experiences in the new input are already covered in the existing experiences, return an empty array [].
+
+Format:
+[
+  {
+    "title": "Job Title",
+    "company": "Company Name",
+    "period": "Start Date - End Date",
+    "description": "Brief description of responsibilities and achievements"
+  }
+]
+
+Return ONLY the JSON array, no other text.`;
+
+            const apiKey = process.env.GEMINI_API_KEY;
+            if (!apiKey) {
+              return;
+            }
+
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      parts: [{ text: prompt }],
+                    },
+                  ],
+                }),
+              }
+            );
+
+            if (!response.ok) {
+              return;
+            }
+
+            const data = await response.json();
+            const responseText =
+              data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+            const jsonMatch =
+              responseText.match(/```(?:json)?\s*(\[[\s\S]*\])\s*```/) ||
+              responseText.match(/(\[[\s\S]*\])/);
+
+            const jsonText = jsonMatch ? jsonMatch[1] : responseText;
+            const newExperiences = JSON.parse(jsonText);
+
+            if (Array.isArray(newExperiences) && newExperiences.length > 0) {
+              const experiencesToInsert = newExperiences.map((exp) => ({
                 user_id: userId,
                 title: exp.title || null,
                 company: exp.company || null,
@@ -319,7 +389,7 @@ export async function POST(request: NextRequest) {
             }
           } catch (error) {
             // Silently fail - don't block the main flow
-            console.error("Error storing experiences:", error);
+            console.error("Error storing new experiences:", error);
           }
         })();
       }

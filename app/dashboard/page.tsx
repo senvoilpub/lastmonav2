@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ResumeDisplay from "@/components/ResumeDisplay";
+import MyLifeSection from "@/components/MyLifeSection";
 
 const MAX_WORDS = 80;
 const MAX_CHARS = 600;
@@ -48,7 +49,7 @@ export default function DashboardPage() {
   const [resume, setResume] = useState<ResumeData | null>(null);
   const [resumes, setResumes] = useState<DbResume[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<"editor" | "generator">("editor");
+  const [mode, setMode] = useState<"editor" | "generator" | "mylife">("editor");
   const [input, setInput] = useState("");
   const [genError, setGenError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -476,9 +477,24 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setMode("generator")}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium"
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
+              mode === "generator"
+                ? "bg-indigo-50 text-indigo-700 font-medium"
+                : "text-gray-700 hover:bg-gray-50"
+            }`}
           >
             <span>Dashboard</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("mylife")}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
+              mode === "mylife"
+                ? "bg-indigo-50 text-indigo-700 font-medium"
+                : "text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <span>My Life</span>
           </button>
           <div className="mt-6">
             <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 sm:px-2 mb-2">
@@ -573,7 +589,7 @@ export default function DashboardPage() {
             href="/profile"
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
           >
-            <span>Profile</span>
+            <span>Settings</span>
           </Link>
           <button
             type="button"
@@ -679,7 +695,9 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {mode === "generator" ? (
+        {mode === "mylife" ? (
+          <MyLifeSection lang={lang} />
+        ) : mode === "generator" ? (
           <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6">
             <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-sm px-4 sm:px-6 py-5 sm:py-6">
               <div className="flex items-center justify-between mb-3">
