@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const [resume, setResume] = useState<ResumeData | null>(null);
   const [resumes, setResumes] = useState<DbResume[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<"editor" | "generator" | "mylife">("editor");
+  const [mode, setMode] = useState<"editor" | "generator" | "mylife">("mylife");
   const [input, setInput] = useState("");
   const [genError, setGenError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);

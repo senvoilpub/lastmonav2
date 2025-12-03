@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+interface DbResume {
+  id: string;
+  prompt: string | null;
+  resume: any | null;
+  created_at: string;
+  is_public?: boolean;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -13,6 +21,7 @@ export default function ProfilePage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [lang, setLang] = useState<"en" | "fr">("en");
+  const [resumes, setResumes] = useState<DbResume[]>([]);
 
   useEffect(() => {
     const init = async () => {
@@ -26,6 +35,18 @@ export default function ProfilePage() {
       }
 
       setEmail(user.email || null);
+
+      // Fetch resumes for the sidebar
+      const { data: existing, error } = await supabase
+        .from("resumes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && existing) {
+        setResumes(existing);
+      }
+
       setCheckingAuth(false);
     };
 
@@ -93,9 +114,9 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Left sidebar - same as dashboard */}
-      <aside className="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col md:sticky md:top-0 md:h-screen">
+      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col md:sticky md:top-0 md:h-screen">
         {/* Top: Logo - Fixed */}
-        <div className="px-4 sm:px-6 py-5 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo.png"
@@ -110,8 +131,8 @@ export default function ProfilePage() {
           </Link>
         </div>
 
-        {/* Middle: Navigation - Scrollable */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2 min-h-0">
+        {/* Middle: Dashboard + Resumes - Scrollable */}
+        <nav className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-2 min-h-0">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-2 mb-1">
             Main
           </div>
@@ -121,16 +142,56 @@ export default function ProfilePage() {
           >
             <span>Dashboard</span>
           </Link>
+          <Link
+            href="/dashboard?mode=mylife"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <span>My Life</span>
+          </Link>
+          <div className="mt-6">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 sm:px-2 mb-2">
+              All resumes
+            </div>
+            <div className="space-y-1">
+              {resumes.length === 0 && (
+                <p className="text-[11px] text-gray-500 px-2">
+                  No resumes yet. Generate one from the homepage.
+                </p>
+              )}
+              {resumes.map((r) => {
+                const created = new Date(r.created_at);
+                const labelDate = created.toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                });
+                const name =
+                  (r.resume && r.resume.name) || "Untitled resume";
+                return (
+                  <Link
+                    key={r.id}
+                    href={`/dashboard?resume=${r.id}`}
+                    className="block px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-50"
+                  >
+                    <div className="truncate">{name}</div>
+                    <div className="text-[10px] text-gray-400">
+                      {labelDate}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </nav>
 
         {/* Bottom: Profile + Log out - Fixed */}
         <div className="px-4 py-4 border-t border-gray-100 space-y-2 flex-shrink-0">
-          <button
-            type="button"
+          <Link
+            href="/profile"
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium"
           >
-            <span>Profile</span>
-          </button>
+            <span>Settings</span>
+          </Link>
           <button
             type="button"
             onClick={async () => {
