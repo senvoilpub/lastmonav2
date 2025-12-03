@@ -90,7 +90,7 @@ function buildFallbackResume(experience: string, lang: Lang) {
         {
           title: "Responsable de projet",
           company: "Entreprise Exemple",
-          period: "2019 - Aujourd’hui",
+          period: "2019 - Aujourd'hui",
           description:
             "• Gère des projets transverses avec plusieurs équipes métiers et techniques\n" +
             "• Coordonne la planification, le suivi des risques et la communication avec les parties prenantes\n" +
@@ -156,6 +156,70 @@ function buildFallbackResume(experience: string, lang: Lang) {
   };
 }
 
+// Helper function to extract experiences from text using Gemini AI
+async function extractExperiencesFromText(
+  text: string
+): Promise<Array<{ title?: string; company?: string; period?: string; description?: string }>> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return [];
+  }
+
+  const prompt = `Extract all work experiences from the following text. Return ONLY a valid JSON array of experience objects. Each experience should have: title, company, period, and description fields.
+
+Format:
+[
+  {
+    "title": "Job Title",
+    "company": "Company Name",
+    "period": "Start Date - End Date",
+    "description": "Brief description of responsibilities and achievements"
+  }
+]
+
+If no clear work experience is found, return an empty array [].
+
+Text to analyze: ${text}`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const responseText =
+      data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+    const jsonMatch =
+      responseText.match(/```(?:json)?\s*(\[[\s\S]*\])\s*```/) ||
+      responseText.match(/(\[[\s\S]*\])/);
+
+    const jsonText = jsonMatch ? jsonMatch[1] : responseText;
+    const experiences = JSON.parse(jsonText);
+
+    return Array.isArray(experiences) ? experiences : [];
+  } catch (error) {
+    return [];
+  }
+}
+
 export async function POST(request: NextRequest) {
   let language: Lang = "en";
 
@@ -217,6 +281,45 @@ export async function POST(request: NextRequest) {
             }
           } catch {
             // Silently fail - don't block the main flow if storage fails
+          }
+        })();
+      }
+    }
+
+    // If user is authenticated, extract and store experiences
+    if (userId) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        });
+
+        // Extract experiences from the input text (fire and forget)
+        (async () => {
+          try {
+            const extracted = await extractExperiencesFromText(experience.trim());
+
+            if (extracted.length > 0) {
+              const experiencesToInsert = extracted.map((exp) => ({
+                user_id: userId,
+                title: exp.title || null,
+                company: exp.company || null,
+                period: exp.period || null,
+                description: exp.description || null,
+              }));
+
+              await supabaseAdmin
+                .from("user_experiences")
+                .insert(experiencesToInsert);
+            }
+          } catch (error) {
+            // Silently fail - don't block the main flow
+            console.error("Error storing experiences:", error);
           }
         })();
       }
