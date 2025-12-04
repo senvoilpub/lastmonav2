@@ -44,9 +44,9 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - api (API routes)
      * - _next/ (all Next.js internal routes including static, image, etc.)
-     * - Static file extensions (.png, .jpg, .svg, etc.)
+     * Static file extensions are handled in the middleware function itself
      */
-    '/((?!api|_next|.*\\.(png|jpg|jpeg|gif|svg|ico|webp|pdf|css|js|json|woff|woff2|ttf|eot)).*)',
+    '/((?!api|_next).*)',
   ],
 };
 
