@@ -8,8 +8,17 @@ export function middleware(request: NextRequest) {
   // Extract subdomain (e.g., "blog" from "blog.lastmona.com")
   const subdomain = hostname.split('.')[0];
   
+  // List of static file extensions to exclude from rewriting
+  const staticExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp', '.pdf', '.css', '.js', '.json', '.woff', '.woff2', '.ttf', '.eot'];
+  const isStaticFile = staticExtensions.some(ext => url.pathname.toLowerCase().endsWith(ext));
+  
   // Handle blog subdomain
   if (subdomain === 'blog' && !hostname.includes('localhost')) {
+    // Don't rewrite static files - let them be served normally
+    if (isStaticFile) {
+      return NextResponse.next();
+    }
+    
     // Rewrite to the blog page
     if (url.pathname === '/') {
       url.pathname = '/blog';
@@ -32,9 +41,9 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - Static file extensions (.png, .jpg, .svg, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|.*\\.(png|jpg|jpeg|gif|svg|ico|webp|pdf|css|js|json|woff|woff2|ttf|eot)).*)',
   ],
 };
 
