@@ -5,8 +5,120 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+interface BlogPost {
+  id: string;
+  title: string;
+  titleFr: string;
+  excerpt: string;
+  excerptFr: string;
+  category: string;
+  categoryFr: string;
+  date: string;
+  readTime: string;
+  readTimeFr: string;
+  image?: string;
+}
+
+// Sample blog posts - in a real app, these would come from a CMS or database
+const blogPosts: BlogPost[] = [
+  {
+    id: "1",
+    title: "10 Resume Mistakes That Are Costing You Interviews",
+    titleFr: "10 erreurs de CV qui vous coûtent des entretiens",
+    excerpt: "Learn about the most common resume mistakes that recruiters see every day and how to avoid them to increase your chances of landing your dream job.",
+    excerptFr: "Découvrez les erreurs de CV les plus courantes que les recruteurs voient chaque jour et comment les éviter pour augmenter vos chances de décrocher le job de vos rêves.",
+    category: "Resume Tips",
+    categoryFr: "Conseils CV",
+    date: "2025-01-15",
+    readTime: "5 min read",
+    readTimeFr: "5 min de lecture",
+  },
+  {
+    id: "2",
+    title: "How to Tailor Your Resume for Each Job Application",
+    titleFr: "Comment adapter votre CV à chaque candidature",
+    excerpt: "Discover the secrets of customizing your resume for different positions without starting from scratch every time.",
+    excerptFr: "Découvrez les secrets pour personnaliser votre CV selon les différents postes sans repartir de zéro à chaque fois.",
+    category: "Resume Tips",
+    categoryFr: "Conseils CV",
+    date: "2025-01-10",
+    readTime: "7 min read",
+    readTimeFr: "7 min de lecture",
+  },
+  {
+    id: "3",
+    title: "The Future of Hiring: AI and Human Connection",
+    titleFr: "L'avenir du recrutement : IA et connexion humaine",
+    excerpt: "Exploring how AI is transforming recruitment while maintaining the human touch that makes hiring meaningful.",
+    excerptFr: "Exploration de la façon dont l'IA transforme le recrutement tout en préservant la dimension humaine qui rend le recrutement significatif.",
+    category: "Industry Insights",
+    categoryFr: "Insights de l'industrie",
+    date: "2025-01-05",
+    readTime: "8 min read",
+    readTimeFr: "8 min de lecture",
+  },
+  {
+    id: "4",
+    title: "Career Pivots: How to Successfully Change Industries",
+    titleFr: "Changements de carrière : comment changer d'industrie avec succès",
+    excerpt: "A comprehensive guide to making a successful career transition, including how to highlight transferable skills on your resume.",
+    excerptFr: "Un guide complet pour réussir une transition de carrière, y compris comment mettre en valeur vos compétences transférables sur votre CV.",
+    category: "Career Growth",
+    categoryFr: "Développement de carrière",
+    date: "2024-12-28",
+    readTime: "10 min read",
+    readTimeFr: "10 min de lecture",
+  },
+  {
+    id: "5",
+    title: "What Recruiters Really Look For in 2025",
+    titleFr: "Ce que les recruteurs recherchent vraiment en 2025",
+    excerpt: "Insights from industry professionals about what makes a candidate stand out in today's competitive job market.",
+    excerptFr: "Les insights de professionnels de l'industrie sur ce qui fait qu'un candidat se démarque sur le marché du travail actuel.",
+    category: "Hiring Trends",
+    categoryFr: "Tendances du recrutement",
+    date: "2024-12-20",
+    readTime: "6 min read",
+    readTimeFr: "6 min de lecture",
+  },
+  {
+    id: "6",
+    title: "Building Trust in Recruitment: Our Mission",
+    titleFr: "Construire la confiance dans le recrutement : notre mission",
+    excerpt: "Why we're building Lastmona and how we plan to rebuild trust between talent and recruiters in the hiring process.",
+    excerptFr: "Pourquoi nous construisons Lastmona et comment nous prévoyons de recréer la confiance entre les talents et les recruteurs dans le processus d'embauche.",
+    category: "Industry Insights",
+    categoryFr: "Insights de l'industrie",
+    date: "2024-12-15",
+    readTime: "5 min read",
+    readTimeFr: "5 min de lecture",
+  },
+];
+
 export default function BlogPage() {
   const [lang, setLang] = useState<"en" | "fr">("en");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = [
+    { en: "All", fr: "Tout", value: null },
+    { en: "Resume Tips", fr: "Conseils CV", value: "Resume Tips" },
+    { en: "Career Growth", fr: "Développement de carrière", value: "Career Growth" },
+    { en: "Hiring Trends", fr: "Tendances du recrutement", value: "Hiring Trends" },
+    { en: "Industry Insights", fr: "Insights de l'industrie", value: "Industry Insights" },
+  ];
+
+  const filteredPosts = selectedCategory
+    ? blogPosts.filter((post) => post.category === selectedCategory)
+    : blogPosts;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -14,73 +126,57 @@ export default function BlogPage() {
       
       <div className="pt-24 pb-12 px-6 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
-          {/* EU Banner */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-full border border-purple-200">
-              <Image
-                src="/europeflag.png"
-                alt="European Union Flag"
-                width={24}
-                height={18}
-                className="object-contain"
-              />
-              <span className="text-sm text-gray-700 font-medium">
-                {lang === "en"
-                  ? "We are a European company dedicated to helping talent reach their dream careers."
-                  : "Nous sommes une entreprise européenne dédiée à aider les talents à atteindre la carrière dont ils rêvent."}
-              </span>
-            </div>
+          {/* Header Section */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              {lang === "en" ? (
+                <>
+                  The Lastmona{" "}
+                  <span className="text-indigo-600">Blog</span>
+                </>
+              ) : (
+                <>
+                  Le{" "}
+                  <span className="text-indigo-600">Blog</span> Lastmona
+                </>
+              )}
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {lang === "en"
+                ? "Career insights, resume tips, and stories about building better careers and rebuilding trust in recruitment."
+                : "Conseils de carrière, astuces CV et histoires sur la construction de meilleures carrières et la reconstruction de la confiance dans le recrutement."}
+            </p>
           </div>
 
-          {/* Hero Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start mt-12">
-            {/* Left Side - Text Content */}
-            <div className="space-y-8 pt-12">
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                {lang === "en" ? (
-                  <>
-                    Career insights, tips, and{" "}
-                    <span className="text-indigo-600">stories that matter</span>
-                  </>
-                ) : (
-                  <>
-                    Conseils de carrière, astuces et{" "}
-                    <span className="text-indigo-600">histoires qui comptent</span>
-                  </>
-                )}
-              </h1>
-              <p className="text-xl text-gray-600 leading-relaxed min-h-[96px]">
-                {lang === "en" ? (
-                  <>
-                    Welcome to the Lastmona blog. We share insights about resumes, career development,
-                    and the future of hiring. Join us as we explore how to build better careers and
-                    rebuild trust in recruitment.
-                  </>
-                ) : (
-                  <>
-                    Bienvenue sur le blog Lastmona. Nous partageons des conseils sur les CV, le développement
-                    de carrière et l&apos;avenir du recrutement. Rejoignez-nous pour explorer comment construire
-                    de meilleures carrières et recréer la confiance dans le recrutement.
-                  </>
-                )}
-              </p>
-              <div className="pt-4">
-                <Link
-                  href="https://lastmona.com"
-                  className="inline-block px-8 py-3 text-base font-semibold text-white bg-indigo-600 rounded-full shadow-md hover:shadow-lg hover:bg-indigo-700 transition-all"
-                >
-                  {lang === "en" ? "Try Lastmona" : "Essayer Lastmona"}
-                </Link>
-              </div>
-            </div>
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-3 justify-center mb-12">
+            {categories.map((category) => (
+              <button
+                key={category.value || "all"}
+                onClick={() => setSelectedCategory(category.value)}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === category.value
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {lang === "en" ? category.en : category.fr}
+              </button>
+            ))}
+          </div>
 
-            {/* Right Side - Blog Illustration */}
-            <div className="flex flex-col h-[350px] items-center justify-center">
-              <div className="w-full max-w-lg text-center space-y-6">
-                <div className="p-8 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-indigo-200 flex items-center justify-center">
+          {/* Blog Posts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {filteredPosts.map((post) => (
+              <article
+                key={post.id}
+                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+              >
+                <Link href={`/blog/${post.id}`} className="block">
+                  {/* Image placeholder */}
+                  <div className="h-48 bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100 relative overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-white/80 flex items-center justify-center">
                         <svg
                           className="w-8 h-8 text-indigo-600"
                           fill="none"
@@ -96,155 +192,66 @@ export default function BlogPage() {
                         </svg>
                       </div>
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {lang === "en" ? "Coming Soon" : "Bientôt disponible"}
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      {lang === "en"
-                        ? "We're preparing great content about careers, resumes, and hiring."
-                        : "Nous préparons du contenu de qualité sur les carrières, les CV et le recrutement."}
-                    </p>
                   </div>
-                </div>
-              </div>
-            </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                        {lang === "en" ? post.category : post.categoryFr}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(post.date)}
+                      </span>
+                    </div>
+
+                    <h2 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                      {lang === "en" ? post.title : post.titleFr}
+                    </h2>
+
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                      {lang === "en" ? post.excerpt : post.excerptFr}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        {lang === "en" ? post.readTime : post.readTimeFr}
+                      </span>
+                      <span className="text-indigo-600 text-sm font-medium group-hover:underline">
+                        {lang === "en" ? "Read more →" : "Lire la suite →"}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </article>
+            ))}
           </div>
 
-          {/* Blog Topics Section */}
-          <div className="mt-12 mb-16">
-            <div className="max-w-7xl">
-              <div className="space-y-12">
-                <h2 className="text-4xl font-bold text-gray-900 leading-tight max-w-3xl">
-                  {lang === "en"
-                    ? "What we'll cover"
-                    : "Ce que nous allons couvrir"}
-                </h2>
-                <p className="text-lg text-gray-600 max-w-3xl">
-                  {lang === "en"
-                    ? "Our blog will feature articles about resume writing, career development, hiring trends, and insights from the recruitment industry."
-                    : "Notre blog présentera des articles sur la rédaction de CV, le développement de carrière, les tendances du recrutement et des insights de l'industrie du recrutement."}
-                </p>
-
-                <div className="relative">
-                  {/* Connecting flow line - hidden on mobile */}
-                  <div
-                    className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-200 transform -translate-y-1/2 z-0"
-                    style={{ marginLeft: "12%", marginRight: "12%" }}
-                  ></div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                    <div className="p-6 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl border-2 border-indigo-200 hover:border-indigo-300 transition-colors">
-                      <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center mb-4">
-                        <svg
-                          className="w-6 h-6 text-indigo-700"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-bold text-gray-900 mb-2">
-                        {lang === "en" ? "Resume Tips" : "Conseils CV"}
-                      </h3>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {lang === "en"
-                          ? "Learn how to write resumes that stand out and get you noticed by recruiters."
-                          : "Apprenez à rédiger des CV qui sortent du lot et attirent l'attention des recruteurs."}
-                      </p>
-                    </div>
-
-                    <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-purple-200 hover:border-purple-300 transition-colors">
-                      <div className="w-10 h-10 rounded-full bg-purple-200 flex items-center justify-center mb-4">
-                        <svg
-                          className="w-6 h-6 text-purple-700"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-bold text-gray-900 mb-2">
-                        {lang === "en" ? "Career Growth" : "Développement de carrière"}
-                      </h3>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {lang === "en"
-                          ? "Strategies and insights to advance your career and reach your professional goals."
-                          : "Stratégies et conseils pour faire progresser votre carrière et atteindre vos objectifs professionnels."}
-                      </p>
-                    </div>
-
-                    <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200 hover:border-blue-300 transition-colors">
-                      <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center mb-4">
-                        <svg
-                          className="w-6 h-6 text-blue-700"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-bold text-gray-900 mb-2">
-                        {lang === "en" ? "Hiring Trends" : "Tendances du recrutement"}
-                      </h3>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {lang === "en"
-                          ? "Stay updated on the latest trends in recruitment and what employers are looking for."
-                          : "Restez informé des dernières tendances en recrutement et de ce que recherchent les employeurs."}
-                      </p>
-                    </div>
-
-                    <div className="p-6 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-2xl border-2 border-indigo-300 hover:border-indigo-400 transition-colors">
-                      <div className="w-10 h-10 rounded-full bg-indigo-300 flex items-center justify-center mb-4">
-                        <svg
-                          className="w-6 h-6 text-indigo-800"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-bold text-gray-900 mb-2">
-                        {lang === "en" ? "Industry Insights" : "Insights de l'industrie"}
-                      </h3>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {lang === "en"
-                          ? "Deep dives into the recruitment industry and how we're working to improve it."
-                          : "Analyses approfondies de l'industrie du recrutement et de la façon dont nous travaillons à l'améliorer."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Newsletter Signup */}
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 p-8 md:p-12 text-center mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              {lang === "en" ? "Stay Updated" : "Restez informé"}
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              {lang === "en"
+                ? "Get the latest career tips and insights delivered to your inbox."
+                : "Recevez les derniers conseils de carrière et insights directement dans votre boîte mail."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder={lang === "en" ? "Enter your email" : "Entrez votre email"}
+                className="flex-1 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+              />
+              <button className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-full hover:bg-indigo-700 transition-colors">
+                {lang === "en" ? "Subscribe" : "S'abonner"}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Footer Section */}
-        <footer className="mt-20 py-12">
+        {/* Footer Section - Same as main site */}
+        <footer className="mt-20 py-12 border-t border-gray-200">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Left - Company Logo and Description */}
