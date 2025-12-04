@@ -17,6 +17,14 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isBlogSubdomain, setIsBlogSubdomain] = useState(false);
+
+  useEffect(() => {
+    // Check if we're on the blog subdomain
+    if (typeof window !== "undefined") {
+      setIsBlogSubdomain(window.location.hostname.startsWith("blog."));
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -78,6 +86,7 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
               height={40}
               className="object-contain"
               priority
+              unoptimized={isBlogSubdomain}
             />
             <span className="text-xl font-bold text-indigo-600 tracking-tight">
               Lastmona

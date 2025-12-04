@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import BlogImage from "@/components/BlogImage";
 
 interface BlogPost {
   id: string;
@@ -257,7 +258,7 @@ export default function BlogPage() {
               {/* Left - Company Logo and Description */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Image
+                  <BlogImage
                     src="/logo.png"
                     alt="Lastmona Logo"
                     width={32}

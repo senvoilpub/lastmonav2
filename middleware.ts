@@ -12,13 +12,17 @@ export function middleware(request: NextRequest) {
   const staticExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp', '.pdf', '.css', '.js', '.json', '.woff', '.woff2', '.ttf', '.eot'];
   const isStaticFile = staticExtensions.some(ext => url.pathname.toLowerCase().endsWith(ext));
   
+  // Always allow Next.js internal routes and static files to pass through
+  if (
+    url.pathname.startsWith('/_next/') ||
+    url.pathname.startsWith('/api/') ||
+    isStaticFile
+  ) {
+    return NextResponse.next();
+  }
+  
   // Handle blog subdomain
   if (subdomain === 'blog' && !hostname.includes('localhost')) {
-    // Don't rewrite static files - let them be served normally
-    if (isStaticFile) {
-      return NextResponse.next();
-    }
-    
     // Rewrite to the blog page
     if (url.pathname === '/') {
       url.pathname = '/blog';
@@ -39,11 +43,10 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
+     * - _next/ (all Next.js internal routes including static, image, etc.)
      * - Static file extensions (.png, .jpg, .svg, etc.)
      */
-    '/((?!api|_next/static|_next/image|.*\\.(png|jpg|jpeg|gif|svg|ico|webp|pdf|css|js|json|woff|woff2|ttf|eot)).*)',
+    '/((?!api|_next|.*\\.(png|jpg|jpeg|gif|svg|ico|webp|pdf|css|js|json|woff|woff2|ttf|eot)).*)',
   ],
 };
 
