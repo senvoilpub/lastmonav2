@@ -96,58 +96,60 @@ export default function Navbar({ lang = "en", onLangChange }: NavbarProps) {
           {/* Middle Navigation - currently empty (Blog removed) */}
           <div className="hidden md:flex md:items-center" />
 
-          {/* Right side - Language switcher + CTA */}
-          <div className="flex items-center gap-3 sm:gap-4 min-w-[220px] justify-end">
-            <div className="flex items-center gap-1 rounded-full bg-gray-100 px-1 py-1 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => onLangChange && onLangChange("en")}
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  lang === "en"
-                    ? "bg-white text-indigo-600 shadow-sm"
-                    : "text-gray-600 hover:text-indigo-600"
-                }`}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => onLangChange && onLangChange("fr")}
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  lang === "fr"
-                    ? "bg-white text-indigo-600 shadow-sm"
-                    : "text-gray-600 hover:text-indigo-600"
-                }`}
-              >
-                FR
-              </button>
-            </div>
-
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/dashboard"
-                  className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
-                >
-                  {lang === "en" ? "Dashboard" : "Tableau de bord"}
-                </Link>
+          {/* Right side - Language switcher + CTA (hidden on blog subdomain) */}
+          {!isBlogSubdomain && (
+            <div className="flex items-center gap-3 sm:gap-4 min-w-[220px] justify-end">
+              <div className="flex items-center gap-1 rounded-full bg-gray-100 px-1 py-1 text-xs font-medium">
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-200 transition-all"
+                  onClick={() => onLangChange && onLangChange("en")}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    lang === "en"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-600 hover:text-indigo-600"
+                  }`}
                 >
-                  {lang === "en" ? "Log out" : "Déconnexion"}
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLangChange && onLangChange("fr")}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    lang === "fr"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-600 hover:text-indigo-600"
+                  }`}
+                >
+                  FR
                 </button>
               </div>
-            ) : (
-            <Link
-              href="/signin"
-              className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
-            >
-              {lang === "en" ? "Sign in" : "Se connecter"}
-            </Link>
-            )}
-          </div>
+
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/dashboard"
+                    className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
+                  >
+                    {lang === "en" ? "Dashboard" : "Tableau de bord"}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-200 transition-all"
+                  >
+                    {lang === "en" ? "Log out" : "Déconnexion"}
+                  </button>
+                </div>
+              ) : (
+              <Link
+                href="/signin"
+                className="w-[130px] text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow-sm hover:shadow-md hover:bg-indigo-700 transition-all"
+              >
+                {lang === "en" ? "Sign in" : "Se connecter"}
+              </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>
